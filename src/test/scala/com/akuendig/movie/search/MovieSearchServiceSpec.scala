@@ -1,14 +1,15 @@
-package com.example
+package com.akuendig.movie.search
 
 import org.specs2.mutable.Specification
 import spray.testkit.Specs2RouteTest
 import spray.http._
 import StatusCodes._
+import com.akuendig.movie.search.MovieSearchService
 
-class MyServiceSpec extends Specification with Specs2RouteTest with MyService {
+class MovieSearchServiceSpec extends Specification with Specs2RouteTest with MovieSearchService {
   def actorRefFactory = system
-  
-  "MyService" should {
+
+  "MovieSearchService" should {
 
     "return a greeting for GET requests to the root path" in {
       Get() ~> myRoute ~> check {

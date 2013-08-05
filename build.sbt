@@ -1,22 +1,35 @@
-organization  := "com.example"
+name := "movie-search"
 
-version       := "0.1"
+organization  := "ak.movie"
+
+version       := "0.0.1"
 
 scalaVersion  := "2.10.2"
 
 scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 
+unmanagedResourceDirectories in Compile <++= baseDirectory { base =>
+    Seq( base / "src/main/webapp" )
+}
+
 resolvers ++= Seq(
   "spray repo" at "http://repo.spray.io/"
 )
 
-libraryDependencies ++= Seq(
-  "io.spray"            %   "spray-can"     % "1.2-M8",
-  "io.spray"            %   "spray-routing" % "1.2-M8",
-  "io.spray"            %   "spray-testkit" % "1.2-M8" % "test",
-  "com.typesafe.akka"   %%  "akka-actor"    % "2.2.0-RC1",
-  "com.typesafe.akka"   %%  "akka-testkit"  % "2.2.0-RC1" % "test",
-  "org.specs2"          %%  "specs2"        % "1.14" % "test"
-)
+libraryDependencies ++= {
+    val sprayVersion = "1.2-M8"
+    val akkaVersion  = "2.2.0-RC1"
+    Seq(
+      "io.spray"            %   "spray-can"     % sprayVersion,
+      "io.spray"            %   "spray-routing" % sprayVersion,
+      "io.spray"            %   "spray-testkit" % sprayVersion,
+      "com.typesafe.akka"   %%  "akka-actor"    % akkaVersion,
+      "org.specs2"          %%  "specs2"        % "1.13" % "test",
+      "org.scalatest"       %   "scalatest_2.10" % "2.0.M5b" % "test",
+      "org.seleniumhq.selenium" % "selenium-java" % "2.28.0" % "test"
+    )
+}
 
 seq(Revolver.settings: _*)
+
+// seq(Twirl.settings: _*)
