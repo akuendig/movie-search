@@ -10,3 +10,5 @@ test-output/
 *.DS_Store
 
 *.log
+
+/src/main/resources/webapp
