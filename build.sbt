@@ -8,9 +8,9 @@ scalaVersion  := "2.10.2"
 
 scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 
-unmanagedResourceDirectories in Compile <++= baseDirectory { base =>
-    Seq( base / "src/main/webapp" )
-}
+//unmanagedResourceDirectories in Compile <++= baseDirectory { base =>
+//    Seq( base / "src/main/webapp/dist" )
+//}
 
 resolvers ++= Seq(
   "spray repo" at "http://repo.spray.io/"

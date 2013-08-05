@@ -4,7 +4,7 @@ import org.specs2.mutable.Specification
 import spray.testkit.Specs2RouteTest
 import spray.http._
 import StatusCodes._
-import com.akuendig.movie.search.MovieSearchService
+import com.akuendig.movie.MovieSearchService
 
 class MovieSearchServiceSpec extends Specification with Specs2RouteTest with MovieSearchService {
   def actorRefFactory = system
