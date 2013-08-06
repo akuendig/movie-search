@@ -23,12 +23,12 @@ libraryDependencies ++= {
     Seq(
       "io.spray"                %   "spray-can"         			% sprayVersion,
       "io.spray"                %   "spray-client"         			% sprayVersion,
-      "io.spray"                %%  "spray-json"                    % "1.2.5",
       "io.spray"                %   "spray-routing"     			% sprayVersion,
       "io.spray"                %   "spray-testkit"     			% sprayVersion,
       "com.typesafe.akka"       %%  "akka-actor"        			% akkaVersion,
       "org.eligosource" 		%% 	"eventsourced-core" 			% "0.6-SNAPSHOT",
       "org.eligosource" 		%% 	"eventsourced-journal-leveldb" 	% "0.6-SNAPSHOT",
+      "org.json4s"              %%  "json4s-jackson"                % "3.2.2",
       "org.specs2"              %%  "specs2"            			% "1.13" % "test",
       "org.scalatest"           %   "scalatest_2.10"    			% "2.0.M5b" % "test",
       "org.seleniumhq.selenium" %   "selenium-java"     			% "2.28.0" % "test"

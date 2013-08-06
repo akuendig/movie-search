@@ -1,7 +1,7 @@
 package com.akuendig.movie.search
 
-import spray.json.{JsValue, JsObject, RootJsonFormat, DefaultJsonProtocol}
 import scala.concurrent.Future
+import org.json4s.DefaultFormats
 
 
 trait XrelQueryComponent {
@@ -9,18 +9,36 @@ trait XrelQueryComponent {
   def xrelQueryService: XrelQueryService
 
   trait XrelQueryService {
-    def fetchSceneRelease(page: Int, year: Int, month: Int): Future[Seq[SceneRelease]]
+    def fetchSceneRelease(page: Int, year: Int, month: Int): Future[PagedSceneReleases]
 
     def fetchDetailedSceneRelease(id: String): Future[DetailedSceneRelease]
 
     def fetchP2PCategories(): Future[Seq[Category]]
 
-    def fetchP2PRelease(page: Int, catId: String): Future[Seq[P2PRelease]]
+    def fetchP2PRelease(page: Int, catId: String): Future[PagedP2PReleases]
 
     def fetchDetailedP2PRelease(id: String): Future[DetailedP2PRelease]
 
     def fetchRateLimit(): Future[RateLimit]
   }
+
+  case class Pagination(
+    currentPage: Int,
+    perPage: Int,
+    totalPages: Int
+  )
+
+  case class PagedSceneReleases(
+    totalCount: Int,
+    pagination: Pagination,
+    list: Seq[SceneRelease]
+  )
+
+  case class PagedP2PReleases(
+    totalCount: Int,
+    pagination: Pagination,
+    list: Seq[P2PRelease]
+  )
 
   case class Flags()
 
@@ -28,8 +46,8 @@ trait XrelQueryComponent {
     id: String,
     tpe: String, // actually 'type'
     title: String,
-    linkHref: String,
-    rating: Float
+    linkHref: String
+    //    rating: Float
     // Uris       []String
     // NumRatings int
   )
@@ -88,8 +106,8 @@ trait XrelQueryComponent {
   )
 
   case class Group(
-    Id: String,
-    Name: String
+    id: String,
+    name: String
   )
 
   case class P2PRelease(
@@ -135,24 +153,21 @@ trait XrelQueryComponent {
     resetTime: String
   )
 
-  object MyJsonProtocol extends DefaultJsonProtocol {
-
-    implicit val flagsFormat = new RootJsonFormat[Flags] {
-      def write(f: Flags) = JsObject()
-
-      def read(value: JsValue) = Flags()
-    }
-
-    implicit val extInfoFormat = jsonFormat5(ExtInfo)
-    implicit val sizeFormat = jsonFormat2(Size)
-    implicit val sceneReleaseFormat = jsonFormat10(SceneRelease)
-    implicit val detailedSceneReleaseFormat = jsonFormat13(DetailedSceneRelease)
-    implicit val categoryFormat = jsonFormat3(Category)
-    implicit val groupFormat = jsonFormat2(Group)
-    implicit val p2pRelease = jsonFormat9(P2PRelease)
-    implicit val detailedP2pRelease = jsonFormat13(DetailedP2PRelease)
-    implicit val rateLimitFormat = jsonFormat3(RateLimit)
-
-  }
+  val xrelFormats = DefaultFormats.withCompanions(
+    classOf[Pagination] -> this,
+    classOf[PagedSceneReleases] -> this,
+    classOf[PagedP2PReleases] -> this,
+    classOf[SceneRelease] -> this,
+    classOf[Flags] -> this,
+    classOf[ExtInfo] -> this,
+    classOf[Size] -> this,
+    classOf[SceneRelease] -> this,
+    classOf[DetailedSceneRelease] -> this,
+    classOf[Category] -> this,
+    classOf[Group] -> this,
+    classOf[P2PRelease] -> this,
+    classOf[DetailedP2PRelease] -> this,
+    classOf[RateLimit] -> this
+  )
 
 }
