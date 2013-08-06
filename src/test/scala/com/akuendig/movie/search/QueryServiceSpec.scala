@@ -10,7 +10,7 @@ class QueryServiceSpec extends Specification {
     "query correct address" in {
       var request: HttpRequest = null
 
-      val mockedService = new QueryService() {
+      val component = new XrelQueryComponentImpl {
         implicit val executionContext = scala.concurrent.ExecutionContext.Implicits.global
 
         val sendReceive: HttpRequest => Future[HttpResponse] = req => {
@@ -19,8 +19,11 @@ class QueryServiceSpec extends Specification {
         }
       }
 
-      mockedService.fetchSceneRelease("testCategory", "testType", 1)
-      request.uri.toString.mustEqual("http://api.xrel.to/api/release/browse_category.json?page=1&per_page=100&ext_info_type=testType&category_name=testCategory")
+      component.xrelQueryService.fetchSceneRelease(1, 2013, 12)
+      request.uri.toString.mustEqual("http://api.xrel.to/api/release/browse_category.json?page=1&per_page=100&archive=2013-12").orThrow
+
+      component.xrelQueryService.fetchSceneRelease(1, 203, 1)
+      request.uri.toString.mustEqual("http://api.xrel.to/api/release/browse_category.json?page=1&per_page=100&archive=0203-01").orThrow
     }
   }
 }

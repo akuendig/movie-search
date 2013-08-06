@@ -7,17 +7,20 @@ import java.io.File
 
 import org.eligosource.eventsourced.core._
 import org.eligosource.eventsourced.journal.leveldb.LeveldbJournalProps
-import com.akuendig.movie.search.{MovieDirectoryPing, MovieQueryActor, MovieDirectoryActor}
+import com.akuendig.movie.search._
 import scala.concurrent.duration._
+import scala.concurrent.{Future, ExecutionContext}
+import spray.http.{HttpResponse, HttpRequest}
 
 
-object Boot extends App {
+object Boot extends App with MovieDirectoryComponent with MovieQueryComponent with XrelQueryComponentImpl {
 
   // we need an ActorSystem to host our application in
   implicit val system = ActorSystem("movies")
 
-  // the dispatcher provides an ExecutionContext
-  import system.dispatcher
+  implicit val executionContext: ExecutionContext = system.dispatcher
+
+  val sendReceive: HttpRequest => Future[HttpResponse] = spray.client.pipelining.sendReceive
 
   // create and start our service actor
   val service = system.actorOf(Props[MovieServiceActor], "movie-service")
@@ -43,5 +46,5 @@ object Boot extends App {
   extension.recover()
 
   // send event message to processor (will be journaled)
-  system.scheduler.scheduleOnce(1.second, directory, MovieDirectoryPing)
+  system.scheduler.scheduleOnce(1.second, directory, MovieDirectoryActor.MovieDirectoryPing)
 }
