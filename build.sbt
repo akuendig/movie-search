@@ -1,6 +1,6 @@
 name := "movie-search"
 
-organization  := "ak.movie"
+organization  := "com.akuendig.movie"
 
 version       := "0.0.1"
 
@@ -13,20 +13,25 @@ scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 //}
 
 resolvers ++= Seq(
-  "spray repo" at "http://repo.spray.io/"
+  "spray repo" at "http://repo.spray.io/",
+  "Eligosource Snapshots" at "http://repo.eligotech.com/nexus/content/repositories/eligosource-snapshots"
 )
 
 libraryDependencies ++= {
     val sprayVersion = "1.2-M8"
     val akkaVersion  = "2.2.0-RC1"
     Seq(
-      "io.spray"            %   "spray-can"     % sprayVersion,
-      "io.spray"            %   "spray-routing" % sprayVersion,
-      "io.spray"            %   "spray-testkit" % sprayVersion,
-      "com.typesafe.akka"   %%  "akka-actor"    % akkaVersion,
-      "org.specs2"          %%  "specs2"        % "1.13" % "test",
-      "org.scalatest"       %   "scalatest_2.10" % "2.0.M5b" % "test",
-      "org.seleniumhq.selenium" % "selenium-java" % "2.28.0" % "test"
+      "io.spray"                %   "spray-can"         			% sprayVersion,
+      "io.spray"                %   "spray-client"         			% sprayVersion,
+      "io.spray"                %%  "spray-json"                    % "1.2.5",
+      "io.spray"                %   "spray-routing"     			% sprayVersion,
+      "io.spray"                %   "spray-testkit"     			% sprayVersion,
+      "com.typesafe.akka"       %%  "akka-actor"        			% akkaVersion,
+      "org.eligosource" 		%% 	"eventsourced-core" 			% "0.6-SNAPSHOT",
+      "org.eligosource" 		%% 	"eventsourced-journal-leveldb" 	% "0.6-SNAPSHOT",
+      "org.specs2"              %%  "specs2"            			% "1.13" % "test",
+      "org.scalatest"           %   "scalatest_2.10"    			% "2.0.M5b" % "test",
+      "org.seleniumhq.selenium" %   "selenium-java"     			% "2.28.0" % "test"
     )
 }
 
