@@ -13,13 +13,14 @@ scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 //}
 
 resolvers ++= Seq(
-  "spray repo" at "http://repo.spray.io/",
+  "Spray Releases" at "http://repo.spray.io/",
+  "Spray Nightlies" at "http://nightlies.spray.io/",
   "Eligosource Snapshots" at "http://repo.eligotech.com/nexus/content/repositories/eligosource-snapshots"
 )
 
 libraryDependencies ++= {
-    val sprayVersion = "1.2-M8"
-    val akkaVersion  = "2.2.0-RC1"
+    val sprayVersion = "1.2-20130801"
+    val akkaVersion  = "2.2.0"
     Seq(
       "io.spray"                %   "spray-can"         			% sprayVersion,
       "io.spray"                %   "spray-client"         			% sprayVersion,

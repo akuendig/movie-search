@@ -10,7 +10,7 @@ import com.akuendig.movie.search.MovieSearchResources
 // this trait defines our service behavior independently from the service actor
 trait MovieSearchService extends HttpService with MovieSearchResources with StaticResources {
 
-  def showPath(req: HttpRequest) = LogEntry("Method = %s, Path = %s" format(req.method, req.uri), Logging.InfoLevel)
+  def showPath(req: HttpRequest) = LogEntry(s"Method = ${req.method}, Path = ${req.uri}", Logging.InfoLevel)
 
   val myRoute =
     logRequest(showPath _) {

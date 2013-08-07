@@ -46,10 +46,10 @@ trait XrelQueryComponent {
     id: String,
     tpe: String, // actually 'type'
     title: String,
-    linkHref: String
-    //    rating: Float
-    // Uris       []String
-    // NumRatings int
+    linkHref: String,
+    rating: Option[Float] = None,
+    uris:       Seq[String] = Seq.empty,
+    numRatings: Option[Int] = None
   )
 
   case class Size(
@@ -62,18 +62,37 @@ trait XrelQueryComponent {
     dirname: String,
     linkHref: String,
 
+    time: Long,
+    groupName: String,
+
     audioType: String,
     videoType: String,
 
-    groupName: String,
-    time: Long,
+    tvSeason: Option[Int] = None,
+    tvEpisode: Option[Int] = None,
 
     size: Size,
-
     extInfo: ExtInfo,
-
     flags: Flags
-  )
+  ) {
+    def toRelease: Release =
+      Release(
+        id = id,
+        dirname = dirname,
+        linkHref = linkHref,
+
+        audioType = Some(audioType),
+        videoType = Some(videoType),
+
+        tvSeason = tvSeason,
+        tvEpisode = tvEpisode,
+
+        size = size,
+        pubTime = time,
+        extInfo = extInfo,
+        group = Group(id = "", name = groupName)
+      )
+  }
 
 
   case class DetailedSceneRelease(
@@ -81,22 +100,45 @@ trait XrelQueryComponent {
     dirname: String,
     linkHref: String,
 
+    time: Long,
+    groupName: String,
+
     audioType: String,
     videoType: String,
 
-    groupName: String,
-    time: Long,
+    tvSeason: Option[Int] = None,
+    tvEpisode: Option[Int] = None,
 
-    size: Size,
-
-    extInfo: ExtInfo,
-
-    flags: Flags,
-
+    numRatings: Int,
     videoRating: Float,
     audioRating: Float,
-    numRatings: Int
-  )
+
+    size: Size,
+    extInfo: ExtInfo,
+    flags: Flags
+  ) {
+    def toRelease: Release =
+      Release(
+        id = id,
+        dirname = dirname,
+        linkHref = linkHref,
+
+        audioType = Some(audioType),
+        videoType = Some(videoType),
+
+        tvSeason = tvSeason,
+        tvEpisode = tvEpisode,
+
+        numRatings = Some(numRatings),
+        audioRating = Some(audioRating),
+        videoRating = Some(videoRating),
+
+        size = size,
+        pubTime = time,
+        extInfo = extInfo,
+        group = Group(id = "", name = groupName)
+      )
+  }
 
 
   case class Category(
@@ -115,42 +157,113 @@ trait XrelQueryComponent {
     dirname: String,
     linkHref: String,
 
-    category: Category,
-
     mainLang: String,
     pubTime: Long,
     sizeMB: Int,
 
-    group: Group,
+    tvSeason: Option[Int] = None,
+    tvEpisode: Option[Int] = None,
 
+    group: Group,
+    category: Category,
     extInfo: ExtInfo
-  )
+  ) {
+    def toRelease: Release =
+      Release(
+        id = id,
+        dirname = dirname,
+        linkHref = linkHref,
+
+        mainLang = Some(mainLang),
+        pubTime = pubTime,
+        size = Size(sizeMB, "MB"),
+
+        tvSeason = tvSeason,
+        tvEpisode = tvEpisode,
+
+        group = group,
+        category = Some(category),
+        extInfo = extInfo
+      )
+  }
 
   case class DetailedP2PRelease(
     id: String,
     dirname: String,
     linkHref: String,
 
-    category: Category,
-
     mainLang: String,
     pubTime: Long,
+    postTime: Long,
     sizeMB: Int,
 
+    numRatings: Option[Int] = None,
+    tvSeason: Option[Int] = None,
+    tvEpisode: Option[Int] = None,
+
     group: Group,
+    category: Category,
+    extInfo: ExtInfo
+  ) {
+    def toRelease: Release =
+      Release(
+        id = id,
+        dirname = dirname,
+        linkHref = linkHref,
 
-    extInfo: ExtInfo,
+        mainLang = Some(mainLang),
+        pubTime = pubTime,
+        postTime = Some(postTime),
+        size = Size(sizeMB, "MB"),
 
-    postTime: Long,
-    numRatings: Int,
-    tvSeason: Int,
-    tvEpisode: Int
-  )
+        numRatings = numRatings,
+        tvSeason = tvSeason,
+        tvEpisode = tvEpisode,
+
+        group = group,
+        category = Some(category),
+        extInfo = extInfo
+      )
+  }
 
   case class RateLimit(
     remainingCalls: Int,
     resetTimeU: Long,
     resetTime: String
+  )
+
+  case class Release(
+    id: String,
+    dirname: String,
+    linkHref: String,
+
+    pubTime: Long,
+    size: Size,
+
+    group: Group,
+
+    extInfo: ExtInfo,
+
+    category: Option[Category] = None,
+    mainLang: Option[String] = None,
+
+    audioType: Option[String] = None,
+    videoType: Option[String] = None,
+
+    postTime: Option[Long] = None,
+    tvSeason: Option[Int] = None,
+    tvEpisode: Option[Int] = None,
+
+    numRatings: Option[Int] = None,
+    audioRating: Option[Float] = None,
+    videoRating: Option[Float] = None
+  )
+
+  case class PagedReleases(
+    page: Int,
+    totalPages: Int,
+    perPage: Int,
+    releases: Seq[Release]
   )
 
   val xrelFormats = DefaultFormats.withCompanions(

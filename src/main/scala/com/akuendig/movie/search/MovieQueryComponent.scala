@@ -1,6 +1,6 @@
 package com.akuendig.movie.search
 
-import akka.actor.Actor
+import akka.actor.{ActorLogging, Actor}
 import org.eligosource.eventsourced.core.Receiver
 import scala.concurrent.Future
 import spray.http.HttpRequest
@@ -14,13 +14,13 @@ trait MovieQueryComponent {
 
     sealed trait MovieQueryMessage
 
-    case class QueryMovies(year: Int, page: Int) extends MovieQueryMessage
+    case class QuerySceneMovies(year: Int, month: Int, page: Int) extends MovieQueryMessage
 
-    case class QueryMoviesResponse(query: QueryMovies, movies: Seq[Movie])
+    case class QuerySceneMoviesResponse(query: QuerySceneMovies, movies: PagedReleases)
 
   }
 
-  class MovieQueryActor extends Actor {
+  class MovieQueryActor extends Actor with ActorLogging {
     this: Receiver =>
 
     import MovieQueryActor._
@@ -30,18 +30,30 @@ trait MovieQueryComponent {
     val sendReceive: HttpRequest => Future[HttpResponse] = spray.client.pipelining.sendReceive
 
     def receive = {
-      case query@QueryMovies(year, page) =>
+      case query@QuerySceneMovies(year, month, page) =>
         val msg = message
         val sndr = sender
 
+        val fetch = xrelQueryService.fetchSceneRelease(page, year, month)
 
+        fetch.onSuccess {
+          case releases: PagedSceneReleases =>
+            val genericReleases = PagedReleases(
+              releases.pagination.currentPage,
+              releases.pagination.totalPages,
+              releases.pagination.perPage,
+              releases.list.map(_.toRelease)
+            )
+            val response = msg.copy(event = QuerySceneMoviesResponse(query, genericReleases))
+            sndr ! response
+            msg.confirm(true)
+        }
 
-        val movies = Seq(Movie(id = "0", title = "Dummy 0"), Movie(id = "1", title = "Dummy 1"))
-        val response = message.copy(event = QueryMoviesResponse(query, movies))
-
-        sender ! response
-
-        message.confirm(true)
+        fetch.onFailure {
+          case t: Throwable =>
+            log.error(t, s"Failure to fetch latest scene releases with query $query")
+            msg.confirm(false)
+        }
     }
   }
 

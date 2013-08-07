@@ -29,7 +29,7 @@ object Boot extends App with MovieDirectoryComponent with MovieQueryComponent wi
   IO(Http) ! Http.Bind(service, interface = "localhost", port = 8080)
 
   // create a journal
-  val journal: ActorRef = LeveldbJournalProps(new File("eventlog/test"), native = false).createJournal
+  val journal: ActorRef = LeveldbJournalProps(new File("eventlog/only-scene"), native = false).createJournal
 
   // create an event-sourcing extension
   val extension = EventsourcingExtension(system, journal)
