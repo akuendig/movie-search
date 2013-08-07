@@ -6,19 +6,21 @@ import scala.concurrent.Future
 import spray.http.HttpRequest
 import spray.http.HttpResponse
 
+object MovieQueryActor {
+  import XrelQueryModels._
+
+  sealed trait MovieQueryMessage
+
+  case class QuerySceneMovies(year: Int, month: Int, page: Int) extends MovieQueryMessage
+
+  case class QuerySceneMoviesResponse(query: QuerySceneMovies, movies: PagedReleases) extends MovieQueryMessage
+
+}
 
 trait MovieQueryComponent {
   this: XrelQueryComponent =>
 
-  object MovieQueryActor {
-
-    sealed trait MovieQueryMessage
-
-    case class QuerySceneMovies(year: Int, month: Int, page: Int) extends MovieQueryMessage
-
-    case class QuerySceneMoviesResponse(query: QuerySceneMovies, movies: PagedReleases)
-
-  }
+  import XrelQueryModels._
 
   class MovieQueryActor extends Actor with ActorLogging {
     this: Receiver =>

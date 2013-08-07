@@ -16,6 +16,8 @@ trait XrelQueryComponentImpl extends XrelQueryComponent {
 
   class QueryService extends XrelQueryService {
 
+    import XrelQueryModels._
+
     import org.json4s._
     import org.json4s.jackson.JsonMethods._
 
@@ -36,6 +38,8 @@ trait XrelQueryComponentImpl extends XrelQueryComponent {
         case ("current_page", x) => ("currentPage", x)
         case ("per_page", x) => ("perPage", x)
         case ("total_pages", x) => ("totalPages", x)
+        case ("tv_season", x) => ("tvSeason", x)
+        case ("tv_episode", x) => ("tvEpisode", x)
       }
 
     def fetchSceneRelease(page: Int, year: Int, month: Int): Future[PagedSceneReleases] = {

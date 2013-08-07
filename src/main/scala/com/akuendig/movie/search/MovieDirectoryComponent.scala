@@ -5,16 +5,18 @@ import org.eligosource.eventsourced.core.{Message, Receiver, Confirm, Eventsourc
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import spray.http.DateTime
 
+object MovieDirectoryActor {
+
+  sealed trait MovieDirectoryMessage
+
+  case object MovieDirectoryPing
+
+}
+
 trait MovieDirectoryComponent {
   this: MovieQueryComponent with XrelQueryComponent =>
 
-  object MovieDirectoryActor {
-
-    sealed trait MovieDirectoryMessage
-
-    case object MovieDirectoryPing
-
-  }
+  import XrelQueryModels._
 
   class ReleaseDirectory{
     private var data = Map.empty[String, Release]

@@ -3,24 +3,7 @@ package com.akuendig.movie.search
 import scala.concurrent.Future
 import org.json4s.DefaultFormats
 
-
-trait XrelQueryComponent {
-
-  def xrelQueryService: XrelQueryService
-
-  trait XrelQueryService {
-    def fetchSceneRelease(page: Int, year: Int, month: Int): Future[PagedSceneReleases]
-
-    def fetchDetailedSceneRelease(id: String): Future[DetailedSceneRelease]
-
-    def fetchP2PCategories(): Future[Seq[Category]]
-
-    def fetchP2PRelease(page: Int, catId: String): Future[PagedP2PReleases]
-
-    def fetchDetailedP2PRelease(id: String): Future[DetailedP2PRelease]
-
-    def fetchRateLimit(): Future[RateLimit]
-  }
+object XrelQueryModels {
 
   case class Pagination(
     currentPage: Int,
@@ -40,7 +23,9 @@ trait XrelQueryComponent {
     list: Seq[P2PRelease]
   )
 
-  case class Flags()
+  case class Flags(
+    english: Option[Boolean]
+  )
 
   case class ExtInfo(
     id: String,
@@ -48,14 +33,14 @@ trait XrelQueryComponent {
     title: String,
     linkHref: String,
     rating: Option[Float] = None,
-    uris:       Seq[String] = Seq.empty,
+    uris: Seq[String] = Seq.empty,
     numRatings: Option[Int] = None
-  )
+  ) extends Serializable
 
   case class Size(
     number: Int,
     unit: String
-  )
+  ) extends Serializable
 
   case class SceneRelease(
     id: String,
@@ -65,11 +50,11 @@ trait XrelQueryComponent {
     time: Long,
     groupName: String,
 
-    audioType: String,
-    videoType: String,
+    audioType: Option[String],
+    videoType: Option[String],
 
-    tvSeason: Option[Int] = None,
-    tvEpisode: Option[Int] = None,
+    tvSeason: Option[Int],
+    tvEpisode: Option[Int],
 
     size: Size,
     extInfo: ExtInfo,
@@ -81,8 +66,8 @@ trait XrelQueryComponent {
         dirname = dirname,
         linkHref = linkHref,
 
-        audioType = Some(audioType),
-        videoType = Some(videoType),
+        audioType = audioType,
+        videoType = videoType,
 
         tvSeason = tvSeason,
         tvEpisode = tvEpisode,
@@ -103,8 +88,8 @@ trait XrelQueryComponent {
     time: Long,
     groupName: String,
 
-    audioType: String,
-    videoType: String,
+    audioType: Option[String],
+    videoType: Option[String],
 
     tvSeason: Option[Int] = None,
     tvEpisode: Option[Int] = None,
@@ -123,8 +108,8 @@ trait XrelQueryComponent {
         dirname = dirname,
         linkHref = linkHref,
 
-        audioType = Some(audioType),
-        videoType = Some(videoType),
+        audioType = audioType,
+        videoType = videoType,
 
         tvSeason = tvSeason,
         tvEpisode = tvEpisode,
@@ -145,12 +130,12 @@ trait XrelQueryComponent {
     id: String,
     metaCat: String,
     subCat: String
-  )
+  ) extends Serializable
 
   case class Group(
     id: String,
     name: String
-  )
+  ) extends Serializable
 
   case class P2PRelease(
     id: String,
@@ -257,19 +242,16 @@ trait XrelQueryComponent {
     numRatings: Option[Int] = None,
     audioRating: Option[Float] = None,
     videoRating: Option[Float] = None
-  )
+  ) extends Serializable
 
   case class PagedReleases(
     page: Int,
     totalPages: Int,
     perPage: Int,
     releases: Seq[Release]
-  )
+  ) extends Serializable
 
   val xrelFormats = DefaultFormats.withCompanions(
-    classOf[Pagination] -> this,
-    classOf[PagedSceneReleases] -> this,
-    classOf[PagedP2PReleases] -> this,
     classOf[SceneRelease] -> this,
     classOf[Flags] -> this,
     classOf[ExtInfo] -> this,
@@ -280,7 +262,32 @@ trait XrelQueryComponent {
     classOf[Group] -> this,
     classOf[P2PRelease] -> this,
     classOf[DetailedP2PRelease] -> this,
-    classOf[RateLimit] -> this
+    classOf[RateLimit] -> this,
+    classOf[Pagination] -> this,
+    classOf[PagedSceneReleases] -> this,
+    classOf[PagedP2PReleases] -> this
   )
+}
+
+
+trait XrelQueryComponent {
+
+  import XrelQueryModels._
+
+  def xrelQueryService: XrelQueryService
+
+  trait XrelQueryService {
+    def fetchSceneRelease(page: Int, year: Int, month: Int): Future[PagedSceneReleases]
+
+    def fetchDetailedSceneRelease(id: String): Future[DetailedSceneRelease]
+
+    def fetchP2PCategories(): Future[Seq[Category]]
+
+    def fetchP2PRelease(page: Int, catId: String): Future[PagedP2PReleases]
+
+    def fetchDetailedP2PRelease(id: String): Future[DetailedP2PRelease]
+
+    def fetchRateLimit(): Future[RateLimit]
+  }
 
 }
