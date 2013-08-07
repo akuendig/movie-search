@@ -1,17 +1,22 @@
 package com.akuendig.movie.search
 
+import akka.testkit.TestKit
 import org.specs2.mutable.Specification
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{ExecutionContext, Await, Future}
 import spray.http._
-import spray.http.MediaTypes._
-import scala.util.Success
 import scala.concurrent.duration.DurationInt
 import org.json4s.JsonAST.JArray
 import java.io.{ByteArrayOutputStream, ObjectOutputStream}
+import com.akuendig.movie.search.xrel.{XrelFormats, SceneRelease}
+import com.akuendig.movie.search.domain.PagedReleases
+import com.akuendig.movie.core.Core
+import akka.actor.ActorSystem
+import spray.http.MediaTypes._
 
+class XrelQueryServiceImplSpec extends TestKit(ActorSystem()) with Specification with Core {
+  sequential
 
-class XrelQuerySpec extends Specification {
-  import XrelQueryModels._
+  implicit val _ec: ExecutionContext = system.dispatcher
 
   val jsonResultLatest =
     """/*-secure-
@@ -22,54 +27,45 @@ class XrelQuerySpec extends Specification {
     "query correct address" in {
       var request: HttpRequest = null
 
-      val component = new XrelQueryComponentImpl {
-        implicit val executionContext = scala.concurrent.ExecutionContext.Implicits.global
-
-        val sendReceive: HttpRequest => Future[HttpResponse] = req => {
+      val service = new XrelQueryServiceImpl() with SendReceive {
+        def sendReceive: HttpRequest => Future[HttpResponse] = req => {
           request = req
           Future(HttpResponse(status = StatusCodes.OK))
         }
       }
 
-      component.xrelQueryService.fetchSceneRelease(1, 2013, 12)
+      service.fetchSceneRelease(1, 2013, 12)
       request.uri.toString.mustEqual("http://api.xrel.to/api/release/latest.json?page=1&per_page=100&archive=2013-12").orThrow
 
-      component.xrelQueryService.fetchSceneRelease(1, 203, 1)
+      service.fetchSceneRelease(1, 203, 1)
       request.uri.toString.mustEqual("http://api.xrel.to/api/release/latest.json?page=1&per_page=100&archive=0203-01").orThrow
     }
 
     "parse a SceneRelease" in {
       import org.json4s.jackson.JsonMethods._
 
-      val component = new XrelQueryComponentImpl {
-        implicit val executionContext = scala.concurrent.ExecutionContext.Implicits.global
-
-        val sendReceive: HttpRequest => Future[HttpResponse] = req => {
+      val service = new XrelQueryServiceImpl() with SendReceive {
+        def sendReceive: HttpRequest => Future[HttpResponse] = req => {
           Future(HttpResponse(status = StatusCodes.OK))
         }
       }
 
-      implicit val formats = XrelQueryModels.xrelFormats
+      implicit val formats = XrelFormats
       val list = parse(jsonResultLatest.lines.drop(1).next) \ "payload" \ "list"
 
       for (item <- list.asInstanceOf[JArray].arr) {
-        component.xrelQueryService.fixFields(item).extract[SceneRelease].mustNotEqual(null)
+        service.fixFields(item).extract[SceneRelease].mustNotEqual(null)
       }
     }
 
     "parse response correctly" in {
-      var request: HttpRequest = null
-
-      val component = new XrelQueryComponentImpl {
-        implicit val executionContext = scala.concurrent.ExecutionContext.Implicits.global
-
-        val sendReceive: HttpRequest => Future[HttpResponse] = req => {
-          request = req
+      val service = new XrelQueryServiceImpl() with SendReceive {
+        def sendReceive: HttpRequest => Future[HttpResponse] = req => {
           Future(HttpResponse(status = StatusCodes.OK, entity = HttpEntity(`application/json`, jsonResultLatest)))
         }
       }
 
-      val response = Await.result(component.xrelQueryService.fetchSceneRelease(1, 2013, 12), DurationInt(5).second)
+      val response = Await.result(service.fetchSceneRelease(1, 2013, 12), DurationInt(5).second)
       response.list.size.mustEqual(5)
     }
 
