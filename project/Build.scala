@@ -81,7 +81,7 @@ object ScalaBuffCustom {
   lazy val settings = Seq[Project.Setting[_]](
     scalabuffArgs := Seq(),
     scalabuffMain := "net.sandrogrzicic.scalabuff.compiler.ScalaBuff",
-    scalabuffVersion := "1.2.0",
+    scalabuffVersion := "1.2.2",
     libraryDependencies <++= (scalabuffVersion in ScalaBuff)(version =>
       Seq(
         "net.sandrogrzicic" %% "scalabuff-compiler" % version % ScalaBuff.name,
