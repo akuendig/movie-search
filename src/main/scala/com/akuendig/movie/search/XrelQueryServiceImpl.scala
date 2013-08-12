@@ -1,15 +1,18 @@
 package com.akuendig.movie.search
 
 import scala.concurrent.{ExecutionContext, Future}
-import spray.http.{StringRendering, Uri}
+import spray.http.{HttpResponse, StringRendering, Uri}
 import spray.http.Uri.Query
 import com.akuendig.movie.search.xrel._
 import com.akuendig.movie.search.domain.Category
 import akka.actor.ActorSystem
-import spray.client.pipelining.Get
+import akka.event.Logging
+import scala.concurrent.duration._
+import spray.httpx.RequestBuilding._
 
 
-abstract class XrelQueryServiceImpl(implicit system: ActorSystem) extends XrelQueryService with SendReceive {
+abstract class XrelQueryServiceImpl(implicit val system: ActorSystem) extends XrelQueryService with SendReceive {
+  val log = Logging(system, getClass)
 
   import org.json4s._
   import org.json4s.jackson.JsonMethods._
@@ -45,14 +48,28 @@ abstract class XrelQueryServiceImpl(implicit system: ActorSystem) extends XrelQu
     )
 
     val req = Get(uriFromAddressAndParams(address, params))
-    val response = sendReceive(req)
+    val response: Future[HttpResponse] = sendReceive(req)(5.seconds)
 
     response.map {
       data =>
-        val jsonData = parse(data.entity.asString.lines.drop(1).next) \ "payload"
-        val releases = fixFields(jsonData).extract[PagedSceneReleases]
+        val jsonData = fixFields(parse(data.entity.asString.lines.drop(1).next)) \ "payload"
+        val totalCount = (jsonData \ "totalCount").extract[Int]
+        val pagination = (jsonData \ "pagination").extract[Pagination]
+        val releasesJArray = (jsonData \ "list").asInstanceOf[JArray]
 
-        releases
+        val releases = releasesJArray.arr.foldLeft(Seq.newBuilder[SceneRelease]) {
+          (builder, rel) =>
+            try {
+              val release = rel.extract[SceneRelease]
+              builder += release
+            } catch {
+              case e: MappingException => log.error(e, s"Reading SceneRelease failed. ${compact(render(rel))}")
+            }
+
+            builder
+        }.result
+
+        PagedSceneReleases(totalCount, pagination, releases)
     }
   }
 
@@ -86,7 +103,7 @@ abstract class XrelQueryServiceImpl(implicit system: ActorSystem) extends XrelQu
     )
 
     val req = Get(uriFromAddressAndParams(address, params))
-    val response = sendReceive(req)
+    val response = sendReceive(req)(5.seconds)
 
     response.map {
       data =>

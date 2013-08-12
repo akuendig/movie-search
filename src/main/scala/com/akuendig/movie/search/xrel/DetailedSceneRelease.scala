@@ -25,15 +25,15 @@ case class DetailedSceneRelease(
   videoRating: Float,
   audioRating: Float,
 
-  size: Size,
+  size: Option[Size],
   extInfo: ExtInfo,
   flags: Flags
 ) {
   def toRelease: Release =
     Release(
       id = id,
-      dirname = dirname,
-      linkHref = linkHref,
+      dirname = Some(dirname),
+      linkHref = Some(linkHref),
 
       audioType = audioType,
       videoType = videoType,
@@ -45,9 +45,9 @@ case class DetailedSceneRelease(
       audioRating = Some(audioRating),
       videoRating = Some(videoRating),
 
-      size = size,
-      pubTime = time,
-      extInfo = extInfo,
-      group = Group(id = "", name = groupName)
+      sizeInfo = size,
+      pubTime = Some(time),
+      extInfo = Some(extInfo),
+      groupInfo = Some(Group(id = "", name = Some(groupName)))
     )
 }

@@ -4,18 +4,22 @@ import akka.testkit.TestKit
 import org.specs2.mutable.Specification
 import scala.concurrent.{ExecutionContext, Await, Future}
 import spray.http._
-import scala.concurrent.duration.DurationInt
 import org.json4s.JsonAST.JArray
 import java.io.{ByteArrayOutputStream, ObjectOutputStream}
 import com.akuendig.movie.search.xrel.{XrelFormats, SceneRelease}
-import com.akuendig.movie.search.domain.PagedReleases
+import com.akuendig.movie.search.domain.{Release, PagedReleases}
 import com.akuendig.movie.core.Core
 import akka.actor.ActorSystem
 import spray.http.MediaTypes._
+import akka.util.Timeout
+import scala.concurrent.duration
+import scala.concurrent.duration.Duration
 
 class XrelQueryServiceImplSpec extends TestKit(ActorSystem()) with Specification with Core {
   sequential
 
+  implicit val _duration: Duration = duration.DurationInt(5).seconds
+  implicit val _timeout: Timeout = duration.DurationInt(5).seconds
   implicit val _ec: ExecutionContext = system.dispatcher
 
   val jsonResultLatest =
@@ -28,7 +32,7 @@ class XrelQueryServiceImplSpec extends TestKit(ActorSystem()) with Specification
       var request: HttpRequest = null
 
       val service = new XrelQueryServiceImpl() with SendReceive {
-        def sendReceive: HttpRequest => Future[HttpResponse] = req => {
+        def sendReceive(req: HttpRequest)(implicit timeout: Timeout = _timeout) = {
           request = req
           Future(HttpResponse(status = StatusCodes.OK))
         }
@@ -45,7 +49,7 @@ class XrelQueryServiceImplSpec extends TestKit(ActorSystem()) with Specification
       import org.json4s.jackson.JsonMethods._
 
       val service = new XrelQueryServiceImpl() with SendReceive {
-        def sendReceive: HttpRequest => Future[HttpResponse] = req => {
+        def sendReceive(req: HttpRequest)(implicit timeout: Timeout = _timeout) = {
           Future(HttpResponse(status = StatusCodes.OK))
         }
       }
@@ -60,22 +64,22 @@ class XrelQueryServiceImplSpec extends TestKit(ActorSystem()) with Specification
 
     "parse response correctly" in {
       val service = new XrelQueryServiceImpl() with SendReceive {
-        def sendReceive: HttpRequest => Future[HttpResponse] = req => {
+        def sendReceive(req: HttpRequest)(implicit timeout: Timeout = _timeout) = {
           Future(HttpResponse(status = StatusCodes.OK, entity = HttpEntity(`application/json`, jsonResultLatest)))
         }
       }
 
-      val response = Await.result(service.fetchSceneRelease(1, 2013, 12), DurationInt(5).second)
+      val response = Await.result(service.fetchSceneRelease(1, 2013, 12), _duration)
       response.list.size.mustEqual(5)
     }
 
     "serialize the response mesage" in {
       import MovieQueryActor._
 
-      val instance = QuerySceneMoviesResponse(QuerySceneMovies(2013, 12, 1), PagedReleases(1, 10, 100, Seq.empty))
+      val instance = QuerySceneReleasesResponse(QuerySceneReleases(2013, 12, 1), Some(PagedReleases(1, 10, 100, Vector.empty[Release])))
       val out = new ObjectOutputStream(new ByteArrayOutputStream())
 
-      out.writeObject(instance.movies)
+      out.writeObject(instance.result)
       out.writeObject(instance.query)
       out.writeObject(instance)
       true.mustEqual(true)

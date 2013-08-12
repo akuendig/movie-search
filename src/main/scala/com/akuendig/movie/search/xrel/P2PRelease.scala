@@ -27,18 +27,18 @@ case class P2PRelease(
   def toRelease: Release =
     Release(
       id = id,
-      dirname = dirname,
-      linkHref = linkHref,
+      dirname = Some(dirname),
+      linkHref = Some(linkHref),
 
       mainLang = Some(mainLang),
-      pubTime = pubTime,
-      size = Size(sizeMB, "MB"),
+      pubTime = Some(pubTime),
+      sizeInfo = Some(Size(sizeMB, Some("MB"))),
 
       tvSeason = tvSeason,
       tvEpisode = tvEpisode,
 
-      group = group,
+      groupInfo = Some(group),
       category = Some(category),
-      extInfo = extInfo
+      extInfo = Some(extInfo)
     )
 }

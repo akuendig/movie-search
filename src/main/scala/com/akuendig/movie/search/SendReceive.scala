@@ -3,10 +3,15 @@ package com.akuendig.movie.search
 import spray.http.{HttpResponse, HttpRequest}
 import scala.concurrent.{ExecutionContext, Future}
 import akka.actor.ActorSystem
+import spray.can.Http
+import akka.io.IO
+import akka.pattern.ask
+import akka.util.Timeout
+import scala.concurrent.duration._
 
 
 trait SendReceive {
-  def sendReceive: HttpRequest => Future[HttpResponse]
+  def sendReceive(req: HttpRequest)(implicit timeout: Timeout): Future[HttpResponse]
 }
 
 trait SpraySendReceive extends SendReceive {
@@ -14,6 +19,6 @@ trait SpraySendReceive extends SendReceive {
 
   private implicit val _ec: ExecutionContext = system.dispatcher
 
-  lazy val sendReceive: HttpRequest => Future[HttpResponse] =
-    spray.client.pipelining.sendReceive
+  def sendReceive(req: HttpRequest)(implicit timeout: Timeout = 5.seconds): Future[HttpResponse] =
+    IO(Http).ask(req).mapTo[HttpResponse]
 }

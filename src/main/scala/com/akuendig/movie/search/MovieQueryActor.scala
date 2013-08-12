@@ -1,57 +1,44 @@
 package com.akuendig.movie.search
 
 import akka.actor.{ActorLogging, Actor}
-import org.eligosource.eventsourced.core.Receiver
-import spray.http.{HttpResponse, HttpRequest}
-import scala.concurrent.Future
-import com.akuendig.movie.search.xrel.PagedSceneReleases
 import com.akuendig.movie.search.domain.PagedReleases
+import scala.util.{Failure, Success}
+import org.eligosource.eventsourced.core.Message
 
 
 object MovieQueryActor {
-
-  sealed trait MovieQueryMessage
-
-  case class QuerySceneMovies(year: Int, month: Int, page: Int) extends MovieQueryMessage
-
-  case class QuerySceneMoviesResponse(query: QuerySceneMovies, movies: PagedReleases) extends MovieQueryMessage
-
+  type QuerySceneReleases = domain.QuerySceneReleases
+  val QuerySceneReleases = domain.QuerySceneReleases
+  type QuerySceneReleasesResponse = domain.QuerySceneReleasesResponse
+  val QuerySceneReleasesResponse = domain.QuerySceneReleasesResponse
 }
 
 
 class MovieQueryActor(xrelQueryService: XrelQueryService) extends Actor with ActorLogging {
-  this: Receiver  =>
 
   import MovieQueryActor._
-
   private implicit val _ = context.system.dispatcher
 
-  val sendReceive: HttpRequest => Future[HttpResponse] = spray.client.pipelining.sendReceive
-
   def receive = {
-    case query@QuerySceneMovies(year, month, page) =>
-      val msg = message
+    case query@QuerySceneReleases(year, month, page) =>
       val sndr = sender
 
       val fetch = xrelQueryService.fetchSceneRelease(page, year, month)
 
-      fetch.onSuccess {
-        case releases: PagedSceneReleases =>
+      fetch.onComplete {
+        case Success(releases) =>
           val genericReleases = PagedReleases(
             releases.pagination.currentPage,
             releases.pagination.totalPages,
             releases.pagination.perPage,
-            releases.list.map(_.toRelease)
+            releases.list.map(_.toRelease).to[Vector]
           )
-          val response = msg.copy(event = QuerySceneMoviesResponse(query, genericReleases))
-          sndr ! response
-          msg.confirm(true)
-      }
 
-      fetch.onFailure {
-        case t: Throwable =>
-          log.error(t, s"Failure to fetch latest scene releases with query $query")
-          msg.confirm(false)
+          sndr ! Message(QuerySceneReleasesResponse(query, Some(genericReleases)))
+        case Failure(t) =>
+          sndr ! QuerySceneReleasesResponse(query)
+
+          log.error(t, "Querying SceneReleases for query {} failed.", query)
       }
   }
 }

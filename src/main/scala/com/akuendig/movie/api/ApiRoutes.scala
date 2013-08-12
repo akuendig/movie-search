@@ -17,7 +17,7 @@ trait ApiRoutes extends RouteConcatenation {
   private implicit val _ = system.dispatcher
 
   val routes =
-    new MovieSearchService(directory).route ~
+    new MovieSearchService(directoryService).route ~
     new StaticResources().route
 
   val rootService = system.actorOf(Props(new RoutedHttpService(routes)))

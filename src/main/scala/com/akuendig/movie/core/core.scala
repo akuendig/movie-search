@@ -1,13 +1,11 @@
 package com.akuendig.movie.core
 
 import akka.actor.{ActorRef, Props, ActorSystem}
-import com.akuendig.movie.ChannelIds
-import org.eligosource.eventsourced.journal.leveldb.LeveldbJournalProps
-import java.io.File
 import org.eligosource.eventsourced.core._
 import com.akuendig.movie.search._
-import scala.concurrent.{Future, ExecutionContext}
-import spray.http.{HttpResponse, HttpRequest}
+import scala.concurrent.ExecutionContext
+import scala.concurrent.stm.Ref
+import com.akuendig.movie.search.domain.Release
 
 /**
  * Core is type containing the ``system: ActorSystem`` member. This enables us to use it in our
@@ -44,24 +42,23 @@ trait BootedCore extends Core {
 trait CoreActors {
   this: Core =>
 
-  private val _system: ActorSystem = system
+  def journal: ActorRef
+
   private implicit val _ec: ExecutionContext = system.dispatcher
 
-  trait CurrentSystem extends Core {
-    lazy val system = _system
-  }
-
-  // create a journal
-  val journal: ActorRef = LeveldbJournalProps(new File("eventlog/only-scene"), native = false).createJournal
-
-  // create an event-sourcing extension
+  // Create an event-sourcing extension
   val extension = EventsourcingExtension(system, journal)
 
-  val query: ActorRef = system.actorOf(Props(new MovieQueryActor(new XrelQueryServiceImpl() with SpraySendReceive with CurrentSystem) with Receiver))
+  // Create the movie directory. Only the DirectoryActor is allowed to write
+  val movieDirectory: Ref[Map[String, Release]] = Ref(Map.empty[String, Release])
 
-  val queryChannel: ActorRef = extension.channelOf(DefaultChannelProps(ChannelIds.MovieQueryChannel, query))
+  // Create the querying actor communicating with the different external services
+  val queryRef: ActorRef = system.actorOf(Props(new MovieQueryActor(new XrelQueryServiceImpl with SpraySendReceive)))
 
-  val directory: ActorRef = extension.processorOf(Props(new MovieDirectoryActor(queryChannel) with Receiver with Confirm with Eventsourced {
+  // Create the actor responsible for updating the movie directory
+  val directoryRef: ActorRef = extension.processorOf(Props(new MovieDirectoryActor(queryRef, movieDirectory) with Receiver with Eventsourced {
     val id = 1
   }))
+
+  val directoryService = new MovieDirectoryService(movieDirectory)
 }
