@@ -12,9 +12,11 @@ class StaticResources(implicit system: ActorSystem)
   val route =
     get {
       pathPrefix("") {
-        getFromResourceDirectory("webapp/")
+        getFromDirectory("/Users/adrian/Documents/work/movie-search/src/main/webapp/dist")
+//        getFromResourceDirectory("webapp/")
       } ~ path("") {
-        getFromResource("webapp/index.html")
+        getFromFile("/Users/adrian/Documents/work/movie-search/src/main/webapp/dist/index.html")
+//        getFromResource("webapp/index.html")
       }
     }
 

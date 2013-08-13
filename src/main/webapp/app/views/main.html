@@ -1,9 +1,12 @@
 <div class="hero-unit">
   <h1>'Allo, 'Allo!</h1>
-  <p>You now have</p>
-  <ul>
-      <li ng-repeat="thing in awesomeThings">{{thing}}</li>
-  </ul>
-  <p>installed.</p>
-  <h3>Enjoy coding! - Yeoman</h3>
+  <p>The first {{movies.length}} movies are</p>
+  <div class="row" ng-repeat="movie in movies">
+    <div class="col-lg-2"><img src="images/140x140.png" alt="mockup"/></div>
+    <div class="col-lg-10">
+      <h4>{{movie.title}}</h4>
+      <p>{{movie.dirName}}</p>
+      <div>{{movie.id}} || {{movie.extId}}</div>
+    </div>
+  </div>
 </div>

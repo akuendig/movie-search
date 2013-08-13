@@ -19,7 +19,7 @@ module.exports = function (grunt) {
   // configurable paths
   var yeomanConfig = {
     app: 'app',
-    dist: '../resources/webapp'
+    dist: 'dist'
   };
 
   try {
@@ -144,7 +144,7 @@ module.exports = function (grunt) {
           src: [
             '<%= yeoman.dist %>/scripts/{,*/}*.js',
             '<%= yeoman.dist %>/styles/{,*/}*.css',
-            '<%= yeoman.dist %>/images/{,*/}*.{png,jpg,jpeg,gif,webp,svg}',
+//            '<%= yeoman.dist %>/images/{,*/}*.{png,jpg,jpeg,gif,webp,svg}',
             '<%= yeoman.dist %>/styles/fonts/*'
           ]
         }
@@ -229,7 +229,7 @@ module.exports = function (grunt) {
             '*.{ico,png,txt}',
             '.htaccess',
             'bower_components/**/*',
-            'images/{,*/}*.{gif,webp}',
+            'images/{,*/}*.{gif,webp,png,jpg,jpeg}',
             'styles/fonts/*'
           ]
         }, {
@@ -251,7 +251,7 @@ module.exports = function (grunt) {
       ],
       dist: [
         'coffee',
-        'imagemin',
+//        'imagemin',
         'svgmin',
         'htmlmin'
       ]

@@ -6,15 +6,19 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
     <title></title>
+
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width">
     <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
 
-        <!-- build:css({.tmp,app}) styles/main.css -->
-        <link rel="stylesheet" href="styles/main.css">
-        <!-- endbuild -->
-</head>
+    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css">
+
+    <!-- build:css({.tmp,app}) styles/main.css -->
+    <link rel="stylesheet" href="styles/main.css">
+    <!-- endbuild -->
+  </head>
   <body ng-app="movieSearchApp">
     <!--[if lt IE 7]>
       <p class="chromeframe">You are using an outdated browser. <a href="http://browsehappy.com/">Upgrade your browser today</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to better experience this site.</p>
@@ -28,6 +32,7 @@
     <!-- Add your site or application content here -->
     <div class="container" ng-view=""></div>
 
+    <!-- for cdn detection we do not include this two frameworks -->
     <script src="bower_components/jquery/jquery.js"></script>
 
     <script src="bower_components/angular/angular.js"></script>
@@ -39,9 +44,10 @@
     <!-- endbuild -->
 
     <!-- build:js({.tmp,app}) scripts/scripts.js -->
+    <script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
     <script src="scripts/services.js"></script>
     <script src="scripts/app.js"></script>
     <script src="scripts/controllers/main.js"></script>
-        <!-- endbuild -->
-</body>
+    <!-- endbuild -->
+  </body>
 </html>

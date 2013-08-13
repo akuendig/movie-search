@@ -1,6 +1,6 @@
 angular.module('movieSearchServices', ['ngResource']).
   factory 'Movie', ['$resource', ($resource) ->
-    $resource 'api/search', {}, {
+    $resource 'api/movies', {}, {
       query:
         method:'GET'
         params:
