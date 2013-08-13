@@ -1,6 +1,7 @@
 /.idea/
 /project/boot/
 /project/plugins/project
+/eventlog/
 target/
 lib_managed/
 src_managed/

@@ -1,7 +1,7 @@
 package com.akuendig.movie.search
 
 import akka.actor.{Actor, ActorRef}
-import org.eligosource.eventsourced.core.{Eventsourced, Receiver}
+import org.eligosource.eventsourced.core.{SnapshotOffer, SnapshotRequest, Eventsourced, Receiver}
 import spray.http.DateTime
 import scala.concurrent.stm.Ref
 import com.akuendig.movie.search.domain.{QuerySceneReleasesResponse, QuerySceneReleases, Release}
@@ -13,6 +13,8 @@ object MovieDirectoryActor {
   sealed trait MovieDirectoryMessage
 
   case object MovieDirectoryPing
+
+  case class MovieDirectorySnapshot(year: Int, month: Int, page: Int, totalPages: Int, movies: Map[String, Release])
 
 }
 
@@ -81,6 +83,27 @@ class MovieDirectoryActor(queryRef: ActorRef, movieDirectory: Ref[Map[String, Re
         "Updated directory with {} entries from query {}, directory now contains {} entries.",
         releases.size, q, directory.size
       )
+    case sr: SnapshotRequest =>
+      sr.process(MovieDirectorySnapshot(
+        year = year,
+        month = month,
+        page = page,
+        totalPages = totalPages,
+        movies = movieDirectory.single.get)
+      )
+    case so: SnapshotOffer =>
+      so.snapshot.state match {
+        case MovieDirectorySnapshot(yr, mt, pg, tp, ms) =>
+          year = yr
+          month = mt
+          page = pg
+          totalPages = tp
+          movieDirectory.single.set(ms)
+
+          log.info("Successfully recovered from {}", SnapshotOffer(so.snapshot.copy(state = "State removed for logging")))
+        case _ =>
+          log.error("Snapshot offer can not be processed: {}", SnapshotOffer(so.snapshot.copy(state = "State removed for logging")))
+      }
     case any =>
       log.warning("Unmatched message {}", any)
   }

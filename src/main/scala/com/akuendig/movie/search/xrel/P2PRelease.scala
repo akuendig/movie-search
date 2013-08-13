@@ -13,16 +13,16 @@ case class P2PRelease(
   dirname: String,
   linkHref: String,
 
-  mainLang: String,
-  pubTime: Long,
-  sizeMB: Int,
+  mainLang: Option[String],
+  pubTime: Option[Long],
+  sizeMB: Option[Int],
 
-  tvSeason: Option[Int] = None,
-  tvEpisode: Option[Int] = None,
+  tvSeason: Option[Int],
+  tvEpisode: Option[Int],
 
-  group: Group,
-  category: Category,
-  extInfo: ExtInfo
+  group: Option[Group],
+  extInfo: Option[ExtInfo],
+  category: Option[Category]
 ) {
   def toRelease: Release =
     Release(
@@ -30,15 +30,15 @@ case class P2PRelease(
       dirname = Some(dirname),
       linkHref = Some(linkHref),
 
-      mainLang = Some(mainLang),
-      pubTime = Some(pubTime),
-      sizeInfo = Some(Size(sizeMB, Some("MB"))),
+      mainLang = mainLang,
+      pubTime = pubTime,
+      sizeInfo = sizeMB.map(Size(_, Some("MB"))),
 
       tvSeason = tvSeason,
       tvEpisode = tvEpisode,
 
-      groupInfo = Some(group),
-      category = Some(category),
-      extInfo = Some(extInfo)
+      groupInfo = group,
+      category = category,
+      extInfo = extInfo
     )
 }

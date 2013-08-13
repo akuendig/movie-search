@@ -12,8 +12,8 @@ case class SceneRelease(
   dirname: String,
   linkHref: String,
 
-  time: Long,
-  groupName: String,
+  time: Option[Long],
+  groupName: Option[String],
 
   audioType: Option[String],
   videoType: Option[String],
@@ -22,8 +22,8 @@ case class SceneRelease(
   tvEpisode: Option[Int],
 
   size: Option[Size],
-  extInfo: ExtInfo,
-  flags: Flags
+  extInfo: Option[ExtInfo],
+  flags: Option[Flags]
 ) {
   def toRelease: Release =
     Release(
@@ -38,8 +38,8 @@ case class SceneRelease(
       tvEpisode = tvEpisode,
 
       sizeInfo = size,
-      pubTime = Some(time),
-      extInfo = Some(extInfo),
-      groupInfo = Some(Group(id = "", name = Some(groupName)))
+      pubTime = time,
+      extInfo = extInfo,
+      groupInfo = groupName.map[Group](n => Group(id = "", name = Some(n)))
     )
 }

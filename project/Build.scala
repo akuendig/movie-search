@@ -18,6 +18,12 @@ object BuildSettings {
   )
 }
 
+object RunSettings {
+  val runSettings = Seq(
+    javaOptions in run += "-Xmx1GB"
+  )
+}
+
 object Resolvers {
   val springReleasesRepo = "Spray Releases" at "http://repo.spray.io/"
   val springNightlyRepo = "Spray Nightlies" at "http://nightlies.spray.io/"
@@ -144,13 +150,14 @@ object ScalaBuffCustom {
 object MovieSearchBuild extends Build {
 
   import BuildSettings._
+  import RunSettings._
   import Resolvers._
   import Dependencies._
 
   lazy val example = Project(
     "movie-search",
     file("."),
-    settings = buildSettings ++ ScalaBuffCustom.settings ++ Revolver.settings ++ Seq(
+    settings = buildSettings ++ runSettings ++ ScalaBuffCustom.settings ++ Revolver.settings ++ Seq(
       resolvers := Seq(springReleasesRepo, springNightlyRepo, typesafeRepo, eligosourceReleasesRepo, eligosourceSnapshotsRepo),
       // compile dependencies (backend)
       libraryDependencies ++= Seq(akkaActor, scalaStm, esCore, esJournal, json4sJackson, thrift, scrooge, finagleThrift),

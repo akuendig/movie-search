@@ -12,22 +12,22 @@ case class DetailedSceneRelease(
   dirname: String,
   linkHref: String,
 
-  time: Long,
-  groupName: String,
+  time: Option[Long],
+  groupName: Option[String],
 
   audioType: Option[String],
   videoType: Option[String],
 
-  tvSeason: Option[Int] = None,
-  tvEpisode: Option[Int] = None,
+  tvSeason: Option[Int],
+  tvEpisode: Option[Int],
 
   numRatings: Int,
   videoRating: Float,
   audioRating: Float,
 
   size: Option[Size],
-  extInfo: ExtInfo,
-  flags: Flags
+  extInfo: Option[ExtInfo],
+  flags: Option[Flags]
 ) {
   def toRelease: Release =
     Release(
@@ -46,8 +46,8 @@ case class DetailedSceneRelease(
       videoRating = Some(videoRating),
 
       sizeInfo = size,
-      pubTime = Some(time),
-      extInfo = Some(extInfo),
-      groupInfo = Some(Group(id = "", name = Some(groupName)))
+      pubTime = time,
+      extInfo = extInfo,
+      groupInfo = groupName.map[Group](n => Group(id = "", name = Some(n)))
     )
 }

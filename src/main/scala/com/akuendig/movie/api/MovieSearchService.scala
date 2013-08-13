@@ -14,13 +14,14 @@ class MovieSearchService(service: MovieDirectoryService)(implicit executionConte
   implicit def json4sJacksonFormats: Formats = Serialization.formats(NoTypeHints)
 
   val route =
-    path("api/search") {
-          get {
+    pathPrefix("api") {
+      path("movies") {
+        get {
           parameters('skip.as[Int] ? 0, 'take.as[Int] ? 10) {
             (skip, take) =>
               complete(service.getMovies.values.drop(skip).take(take))
           }
         }
-
+      }
     }
 }
