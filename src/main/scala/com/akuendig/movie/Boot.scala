@@ -1,7 +1,7 @@
 package com.akuendig.movie
 
 
-import com.akuendig.movie.core.{CoreActors, BootedCore}
+import com.akuendig.movie.core.{ScalaBufSerializer, CoreActors, BootedCore}
 import com.akuendig.movie.api.ApiRoutes
 import com.akuendig.movie.search.MovieDirectoryActor
 import scala.concurrent.duration._
@@ -18,12 +18,16 @@ import akka.util.Timeout
 object Boot extends App with BootedCore with CoreActors with ApiRoutes with Web {
 
   // create a journal
-  lazy val journal: ActorRef = LeveldbJournalProps(new File("eventlog/only-scene"), native = false).createJournal
+  lazy val journal: ActorRef = LeveldbJournalProps(
+    dir = new File("eventlog/only-scene"),
+    native = false,
+    snapshotSerializer = new ScalaBufSerializer()
+  ).createJournal
 
   private implicit val _ec: ExecutionContext = system.dispatcher
 
   // recover registered processors by replaying journaled events
-//  extension.recover(extension.replayParams.allWithSnapshot)
+  //  extension.recover(extension.replayParams.allWithSnapshot)
   extension.recover()
 
   def takeSnapshot {
@@ -37,6 +41,6 @@ object Boot extends App with BootedCore with CoreActors with ApiRoutes with Web 
     }
   }
 
-//  system.scheduler.schedule(30.minutes, 30.minutes)(takeSnapshot)
+  //  system.scheduler.schedule(30.minutes, 30.minutes)(takeSnapshot)
   system.scheduler.schedule(1.second, 15.seconds, directoryRef, MovieDirectoryActor.MovieDirectoryPing)
 }

@@ -3,9 +3,12 @@ package com.akuendig.movie.core
 import akka.serialization.Serializer
 import com.google.protobuf.MessageLite
 import com.google.protobuf.MessageLite.Builder
+import org.eligosource.eventsourced.journal.common.serialization.SnapshotSerializer
+import java.io.{ObjectInputStream, InputStream, ObjectOutputStream, OutputStream}
+import org.eligosource.eventsourced.core.SnapshotMetadata
 
 
-class ScalaBufSerializer extends Serializer {
+class ScalaBufSerializer extends Serializer with SnapshotSerializer {
   val ARRAY_OF_BYTE_ARRAY = Array[Class[_]](classOf[Array[Byte]])
   def includeManifest: Boolean = true
   def identifier = 2
@@ -25,6 +28,32 @@ class ScalaBufSerializer extends Serializer {
 
         builder.mergeFrom(bytes)
     }
+
+  def serializeSnapshot(stream: OutputStream, metadata: SnapshotMetadata, state: Any) {
+    state match {
+      case m: MessageLite =>
+        val objectOut = new ObjectOutputStream(stream)
+
+        objectOut.writeUTF(m.getClass.getName)
+        objectOut.writeInt(m.getSerializedSize)
+        objectOut.write(toBinary(m))
+        objectOut.flush()
+      case _              =>
+        throw new IllegalArgumentException("Can't serialize a non-protobuf message using protobuf [" + state + "]")
+    }
+  }
+
+  def deserializeSnapshot(stream: InputStream, metadata: SnapshotMetadata): Any = {
+    val objectIn = new ObjectInputStream(stream)
+
+    val className = objectIn.readUTF()
+    val size = objectIn.readInt
+    val data = Array.ofDim[Byte](size)
+    val clazz = Class.forName(className)
+
+    objectIn.read(data, 0, size)
+    fromBinary(data, clazz)
+  }
 }
 
 object CompanionHelper {

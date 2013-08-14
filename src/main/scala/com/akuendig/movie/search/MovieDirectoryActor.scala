@@ -6,6 +6,7 @@ import spray.http.DateTime
 import scala.concurrent.stm.Ref
 import com.akuendig.movie.search.domain.{QuerySceneReleasesResponse, QuerySceneReleases, Release}
 import spray.util.SprayActorLogging
+import com.akuendig.movie.core.IterableBackedSeq
 
 
 object MovieDirectoryActor {
@@ -14,14 +15,16 @@ object MovieDirectoryActor {
 
   case object MovieDirectoryPing
 
-  case class MovieDirectorySnapshot(year: Int, month: Int, page: Int, totalPages: Int, movies: Map[String, Release])
+  val MovieDirectorySnapshot = com.akuendig.movie.search.domain.MovieDirectorySnapshot
+  type MovieDirectorySnapshot = com.akuendig.movie.search.domain.MovieDirectorySnapshot
 
 }
 
 class MovieDirectoryActor(queryRef: ActorRef, movieDirectory: Ref[Map[String, Release]]) extends Actor with SprayActorLogging {
   this: Receiver with Eventsourced =>
 
-//  import MovieQueryActor._
+  //  import MovieQueryActor._
+
   import MovieDirectoryActor._
 
   val startedAt = DateTime.now
@@ -84,13 +87,18 @@ class MovieDirectoryActor(queryRef: ActorRef, movieDirectory: Ref[Map[String, Re
         releases.size, q, directory.size
       )
     case sr: SnapshotRequest =>
+      type ReleaseSeq = scala.collection.immutable.Seq[Release]
+
       sr.process(MovieDirectorySnapshot(
         year = year,
         month = month,
         page = page,
         totalPages = totalPages,
-        movies = movieDirectory.single.get)
-      )
+        movies = movieDirectory.single.get.values match {
+          case seq: ReleaseSeq => seq
+          case sn => new IterableBackedSeq(sn)
+        }
+      ))
     case so: SnapshotOffer =>
       so.snapshot.state match {
         case MovieDirectorySnapshot(yr, mt, pg, tp, ms) =>
@@ -98,7 +106,7 @@ class MovieDirectoryActor(queryRef: ActorRef, movieDirectory: Ref[Map[String, Re
           month = mt
           page = pg
           totalPages = tp
-          movieDirectory.single.set(ms)
+          movieDirectory.single.set((ms.map(_.id), ms).zipped.toMap)
 
           log.info("Successfully recovered from {}", SnapshotOffer(so.snapshot.copy(state = "State removed for logging")))
         case _ =>

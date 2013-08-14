@@ -74,3 +74,11 @@ message QuerySceneReleasesResponse {
     required QuerySceneReleases query = 1;
     optional PagedReleases result = 2;
 }
+
+message MovieDirectorySnapshot {
+    required int32 year = 1;
+    required int32 month = 2;
+    required int32 page = 3;
+    required int32 totalPages = 4;
+    repeated Release movies = 5;
+}
