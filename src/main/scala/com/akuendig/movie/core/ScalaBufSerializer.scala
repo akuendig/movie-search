@@ -30,29 +30,37 @@ class ScalaBufSerializer extends Serializer with SnapshotSerializer {
     }
 
   def serializeSnapshot(stream: OutputStream, metadata: SnapshotMetadata, state: Any) {
+    val objectOut = new ObjectOutputStream(stream)
+
     state match {
       case m: MessageLite =>
-        val objectOut = new ObjectOutputStream(stream)
-
+        objectOut.writeBoolean(true)
         objectOut.writeUTF(m.getClass.getName)
         objectOut.writeInt(m.getSerializedSize)
         objectOut.write(toBinary(m))
-        objectOut.flush()
       case _              =>
-        throw new IllegalArgumentException("Can't serialize a non-protobuf message using protobuf [" + state + "]")
+        objectOut.writeBoolean(false)
+        SnapshotSerializer.java.serializeSnapshot(objectOut, metadata, state)
     }
+
+    objectOut.flush()
   }
 
   def deserializeSnapshot(stream: InputStream, metadata: SnapshotMetadata): Any = {
     val objectIn = new ObjectInputStream(stream)
+    val isProtobuf = objectIn.readBoolean
 
-    val className = objectIn.readUTF()
-    val size = objectIn.readInt
-    val data = Array.ofDim[Byte](size)
-    val clazz = Class.forName(className)
+    if (isProtobuf) {
+      val className = objectIn.readUTF()
+      val size = objectIn.readInt
+      val data = Array.ofDim[Byte](size)
+      val clazz = Class.forName(className)
 
-    objectIn.read(data, 0, size)
-    fromBinary(data, clazz)
+      objectIn.read(data, 0, size)
+      fromBinary(data, clazz)
+    } else {
+      SnapshotSerializer.java.deserializeSnapshot(objectIn, metadata)
+    }
   }
 }
 
