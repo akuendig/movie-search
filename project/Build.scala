@@ -59,10 +59,14 @@ object Dependencies {
   lazy val esJournal = "org.eligosource"  %% "eventsourced-journal-leveldb" % "0.6-SNAPSHOT" % "compile"
 
   lazy val scalaStm = "org.scala-stm" %% "scala-stm" % "0.7" % "compile"
+  lazy val scalaArm = "com.jsuereth"  %% "scala-arm" % "1.3" % "compile"
 
   lazy val thrift =        "org.apache.thrift"    % "libthrift"       % "0.9.0" % "compile"
   lazy val scrooge =       "com.twitter"          %% "scrooge-core"   % "3.5.0" % "compile"
   lazy val finagleThrift = "com.twitter"          %% "finagle-thrift" % "6.5.2" % "compile"
+
+  lazy val msgpackJson = "com.googlecode.json-simple" % "json-simple" % "1.1.1" % "compile"
+  lazy val msgpackJavassist = "org.javassist" % "javassist" % "3.16.1-GA" % "compile"
 
   //  lazy val protoBuf =      "com.google.protobuf"  % "protobuf-java"   % "2.5.0" % "compile"
   //  lazy val scalaBuff = "net.sandrogrzicic" %%  "scalabuff-compiler" % "1.1.1" % "compile"
@@ -160,7 +164,7 @@ object MovieSearchBuild extends Build {
     settings = buildSettings ++ runSettings ++ ScalaBuffCustom.settings ++ Revolver.settings ++ Seq(
       resolvers := Seq(springReleasesRepo, springNightlyRepo, typesafeRepo, eligosourceReleasesRepo, eligosourceSnapshotsRepo),
       // compile dependencies (backend)
-      libraryDependencies ++= Seq(akkaActor, scalaStm, esCore, esJournal, json4sJackson, thrift, scrooge, finagleThrift),
+      libraryDependencies ++= Seq(akkaActor, scalaStm, scalaArm, msgpackJson, msgpackJavassist, esCore, esJournal, json4sJackson, thrift, scrooge, finagleThrift),
       // compile dependencies (frontend)
       libraryDependencies ++= Seq(sprayCan, sprayClient, sprayRouting),
       // test dependencies

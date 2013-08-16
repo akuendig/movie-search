@@ -100,6 +100,7 @@ class MovieDirectoryActor(queryRef: ActorRef, movieDirectory: Ref[Map[String, Re
         }
       ))
     case so: SnapshotOffer =>
+      println(s"$so")
       so.snapshot.state match {
         case MovieDirectorySnapshot(yr, mt, pg, tp, ms) =>
           year = yr

@@ -27,11 +27,12 @@ object Boot extends App with BootedCore with CoreActors with ApiRoutes with Web 
   private implicit val _ec: ExecutionContext = system.dispatcher
 
   // recover registered processors by replaying journaled events
-  //  extension.recover(extension.replayParams.allWithSnapshot)
-  extension.recover()
+  extension.recover(extension.replayParams.allWithSnapshot)
+
+  //  extension.recover()
 
   def takeSnapshot {
-    implicit val timeout = Timeout(5.seconds)
+    implicit val timeout = Timeout(1 minute)
 
     (directoryRef ? SnapshotRequest).mapTo[SnapshotSaved].onComplete {
       case Success(saved) =>
@@ -41,6 +42,6 @@ object Boot extends App with BootedCore with CoreActors with ApiRoutes with Web 
     }
   }
 
-  //  system.scheduler.schedule(30.minutes, 30.minutes)(takeSnapshot)
+  system.scheduler.schedule(1.minute, 30.minutes)(takeSnapshot)
   system.scheduler.schedule(1.second, 15.seconds, directoryRef, MovieDirectoryActor.MovieDirectoryPing)
 }

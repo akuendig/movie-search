@@ -1,26 +1,30 @@
 package com.akuendig.movie.core
 
 import akka.serialization.Serializer
-import com.google.protobuf.MessageLite
+import com.google.protobuf.{ExtensionRegistryLite, CodedInputStream, CodedOutputStream, MessageLite}
 import com.google.protobuf.MessageLite.Builder
 import org.eligosource.eventsourced.journal.common.serialization.SnapshotSerializer
-import java.io.{ObjectInputStream, InputStream, ObjectOutputStream, OutputStream}
+import java.io.{InputStream, OutputStream}
 import org.eligosource.eventsourced.core.SnapshotMetadata
+import resource._
+import com.akuendig.movie.search.domain.MovieDirectorySnapshot
 
 
 class ScalaBufSerializer extends Serializer with SnapshotSerializer {
   val ARRAY_OF_BYTE_ARRAY = Array[Class[_]](classOf[Array[Byte]])
+
   def includeManifest: Boolean = true
+
   def identifier = 2
 
   def toBinary(obj: AnyRef): Array[Byte] = obj match {
     case m: MessageLite => m.toByteArray
-    case _              => throw new IllegalArgumentException("Can't serialize a non-protobuf message using protobuf [" + obj + "]")
+    case _ => throw new IllegalArgumentException("Can't serialize a non-protobuf message using protobuf [" + obj + "]")
   }
 
   def fromBinary(bytes: Array[Byte], clazz: Option[Class[_]]): AnyRef =
     clazz match {
-      case None    => throw new IllegalArgumentException("Need a protobuf message class to be able to serialize bytes using protobuf")
+      case None => throw new IllegalArgumentException("Need a protobuf message class to be able to serialize bytes using protobuf")
       case Some(c) =>
         val companion = CompanionHelper.companion(c)
         val companionClazz = companion.getClass
@@ -30,36 +34,56 @@ class ScalaBufSerializer extends Serializer with SnapshotSerializer {
     }
 
   def serializeSnapshot(stream: OutputStream, metadata: SnapshotMetadata, state: Any) {
-    val objectOut = new ObjectOutputStream(stream)
-
     state match {
-      case m: MessageLite =>
-        objectOut.writeBoolean(true)
-        objectOut.writeUTF(m.getClass.getName)
-        objectOut.writeInt(m.getSerializedSize)
-        objectOut.write(toBinary(m))
-      case _              =>
-        objectOut.writeBoolean(false)
-        SnapshotSerializer.java.serializeSnapshot(objectOut, metadata, state)
-    }
+      case m: MessageLite => for (out <- managed(CodedOutputStream.newInstance(stream))) {
+        out.writeBoolNoTag(true)
+        out.writeStringNoTag(m.getClass.getName)
+        out.writeInt32NoTag(m.getSerializedSize)
+        out.writeMessageNoTag(m)
+      }
+      case _ =>
+        for (out <- managed(CodedOutputStream.newInstance(stream))) {
+          out.writeBoolNoTag(false)
+        }
 
-    objectOut.flush()
+        SnapshotSerializer.java.serializeSnapshot(stream, metadata, state)
+        stream.flush()
+    }
   }
 
   def deserializeSnapshot(stream: InputStream, metadata: SnapshotMetadata): Any = {
-    val objectIn = new ObjectInputStream(stream)
-    val isProtobuf = objectIn.readBoolean
+    val in = CodedInputStream.newInstance(stream)
+    val isProtobuf = in.readBool()
 
-    if (isProtobuf) {
-      val className = objectIn.readUTF()
-      val size = objectIn.readInt
-      val data = Array.ofDim[Byte](size)
-      val clazz = Class.forName(className)
+    try {
+      if (isProtobuf) {
+        val className = in.readString()
+        val size = in.readInt32()
 
-      objectIn.read(data, 0, size)
-      fromBinary(data, clazz)
-    } else {
-      SnapshotSerializer.java.deserializeSnapshot(objectIn, metadata)
+        val clazz = Class.forName(className)
+        val companion = CompanionHelper.companion(clazz)
+        val companionClazz = companion.getClass
+        val builder: Builder = companionClazz.getDeclaredMethod("newBuilder").invoke(companion).asInstanceOf[Builder]
+
+        println(isProtobuf, className, clazz, companion, builder, size)
+
+        in.setSizeLimit(size + in.getTotalBytesRead + 1)
+
+        val message = in.readMessage(builder, ExtensionRegistryLite.getEmptyRegistry)
+
+        println(in.getTotalBytesRead, message.asInstanceOf[MovieDirectorySnapshot])
+        message
+      } else {
+        SnapshotSerializer.java.deserializeSnapshot(stream, metadata)
+      }
+    } catch {
+      case t: Throwable => println(t); throw t
+    }
+  }
+
+  implicit val codedResource = new Resource[CodedOutputStream] {
+    def close(r: CodedOutputStream) {
+      r.flush()
     }
   }
 }
