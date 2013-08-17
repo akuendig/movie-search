@@ -6,7 +6,7 @@ import scala.concurrent.{ExecutionContext, Await, Future}
 import spray.http._
 import org.json4s.JsonAST.JArray
 import java.io.{ByteArrayOutputStream, ObjectOutputStream}
-import com.akuendig.movie.search.xrel.{XrelFormats, SceneRelease}
+import com.akuendig.movie.search.xrel.{SceneRelease}
 import com.akuendig.movie.search.domain.{Release, PagedReleases}
 import com.akuendig.movie.core.Core
 import akka.actor.ActorSystem

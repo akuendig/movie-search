@@ -15,9 +15,9 @@ abstract class XrelQueryServiceImpl(implicit val system: ActorSystem) extends Xr
   val log = Logging(system, getClass)
 
   import org.json4s._
-  import org.json4s.jackson.JsonMethods._
+  import org.json4s.native.JsonMethods._
 
-  private implicit val _fmts: Formats = XrelFormats
+  private implicit val _fmts: Formats = DefaultFormats
   private implicit val _ec: ExecutionContext = system.dispatcher
 
   def uriFromAddressAndParams(address: String, params: Map[String, String]) =

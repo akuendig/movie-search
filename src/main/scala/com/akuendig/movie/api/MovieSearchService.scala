@@ -4,14 +4,14 @@ import scala.concurrent.ExecutionContext
 import spray.routing.Directives
 import com.akuendig.movie.search.MovieDirectoryService
 import org.json4s.{NoTypeHints, Formats, DefaultJsonFormats}
-import spray.httpx.Json4sJacksonSupport
-import org.json4s.jackson.Serialization
+import org.json4s.native.Serialization
+import spray.httpx.Json4sSupport
 
 
 class MovieSearchService(service: MovieDirectoryService)(implicit executionContext: ExecutionContext)
-  extends Directives with Json4sJacksonSupport with DefaultJsonFormats {
+  extends Directives with Json4sSupport with DefaultJsonFormats {
 
-  implicit def json4sJacksonFormats: Formats = Serialization.formats(NoTypeHints)
+  implicit def json4sFormats: Formats = Serialization.formats(NoTypeHints)
 
   val route =
     pathPrefix("api") {
