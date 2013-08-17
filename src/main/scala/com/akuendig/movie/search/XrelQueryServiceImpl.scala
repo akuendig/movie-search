@@ -68,8 +68,6 @@ abstract class XrelQueryServiceImpl(implicit val system: ActorSystem) extends Xr
             builder
         }.result
 
-        log.info("{}\n{}", releases.head, (fixFields(parse(data.entity.asString.lines.drop(1).next)) \ "payload" \ "list").asInstanceOf[JArray].arr.head)
-
         PagedSceneReleases(totalCount, pagination, releases)
     }
   }
