@@ -5,30 +5,11 @@ import java.lang.{Integer => Int, Long, Float, Double}
 import scala.reflect.runtime.universe._
 
 
-@Message final case class Size(
-  @Index(1) var number: Int,
-  @Index(2) var unit: Option[String] = None
+@Message final case class Group(
+  @Index(1) var id: String,
+  @Index(2) var name: Option[String] = None
 ) extends HasTypeTag {
-  def this() = this(0)
+  def this() = this("")
 
-  lazy val getTypeTag: TypeTag[_] = typeTag[Size]
+  lazy val getTypeTag: TypeTag[_] = typeTag[Group]
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

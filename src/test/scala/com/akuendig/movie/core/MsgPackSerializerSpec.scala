@@ -1,67 +1,206 @@
 package com.akuendig.movie.core
 
 import org.specs2.mutable.Specification
-import com.akuendig.movie.domain.{Size, Release, PagedReleases}
+import com.akuendig.movie.domain._
+import com.akuendig.movie.domain.Size
+import com.akuendig.movie.domain.Release
+import com.akuendig.movie.domain.PagedReleases
+import scala.Some
+import com.akuendig.movie.domain.Category
+import spray.http.DateTime
+import akka.serialization.Serializer
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
+import org.eligosource.eventsourced.core.SnapshotSaved
 
 
 class MsgPackSerializerSpec extends Specification {
   "MessagePackSerializer" should {
-    "de-/serialize a Size with unit" in {
-      val size = new Size(12, Some("MB"))
-      val serializer = new MsgPackSerializer()
 
-      val binary = serializer.toBinary(size)
+    def checkSerialisation(serializer: Serializer, originals: Seq[AnyRef]) {
+      val serialized = originals.map(serializer.toBinary)
+      val deserialized = serialized.map(serializer.fromBinary(_, originals.head.getClass))
 
-      binary.size must be greaterThan(0)
-
-      val deserialized = serializer.fromBinary(binary, size.getClass)
-
-      deserialized.mustEqual(size)
+      for ((orig, deser) <- (originals, deserialized).zipped) {
+        deser.mustEqual(orig)
+      }
     }
 
-    "de-/serialize a Size without unit" in {
-      val size = new Size(12, None)
+    val fullSize = Size(number = 12, unit = Some("MB"))
+
+    "de-/serialize a Size" in {
       val serializer = new MsgPackSerializer()
+      val values = Seq(
+        Size(number = 12),
+        fullSize
+      )
 
-      val binary = serializer.toBinary(size)
-
-      binary.size must be greaterThan(0)
-
-      val deserialized = serializer.fromBinary(binary, size.getClass)
-
-      deserialized.mustEqual(size)
+      checkSerialisation(serializer, values)
     }
+
+    val fullGroup = Group(id = "123", name = Some("group name"))
+
+    "de-/serialize a Group" in {
+      val serializer = new MsgPackSerializer()
+      val values = Seq(
+        Group(id = "123"),
+        fullGroup
+      )
+
+      checkSerialisation(serializer, values)
+    }
+
+    val fullCategory = Category(id = "123", subCat = Some("subCat"), metaCat = Some("metaCat"))
+
+    "de-/serialize a Category" in {
+      val serializer = new MsgPackSerializer()
+      val values = Seq(
+        Category(id = "123"),
+        Category(id = "123", subCat = Some("subCat")),
+        Category(id = "123", metaCat = Some("metaCat")),
+        fullCategory
+      )
+
+      checkSerialisation(serializer, values)
+    }
+
+    val fullExtInfo = ExtInfo(id = "123", tpe = "MOVIE", title = "RED", uris = Set("http://www.google.com"), linkHref = Some("http://www.google.com"), numRatings = Some(12), rating = Some(8.5f))
+
+    "de-/serialize a ExtInfo" in {
+      val serializer = new MsgPackSerializer()
+      val values = Seq(
+        ExtInfo(id = "123", tpe = "MOVIE", title = "RED"),
+        ExtInfo(id = "123", tpe = "MOVIE", title = "RED", linkHref = Some("http://www.google.com")),
+        ExtInfo(id = "123", tpe = "MOVIE", title = "RED", uris = Set("http://www.google.com")),
+        ExtInfo(id = "123", tpe = "MOVIE", title = "RED", numRatings = Some(12)),
+        ExtInfo(id = "123", tpe = "MOVIE", title = "RED", rating = Some(8.5f)),
+        ExtInfo(id = "123", tpe = "MOVIE", title = "RED", numRatings = Some(12), rating = Some(8.5f)),
+        ExtInfo(id = "123", tpe = "MOVIE", title = "RED", linkHref = Some("http://www.google.com"), numRatings = Some(12), rating = Some(8.5f)),
+        ExtInfo(id = "123", tpe = "MOVIE", title = "RED", uris = Set("http://www.google.com"), numRatings = Some(12), rating = Some(8.5f)),
+        fullExtInfo
+      )
+
+      checkSerialisation(serializer, values)
+    }
+
+    val fullRelease = Release(
+      id = "123",
+      dirname = Some("dirname"),
+      linkHref = Some("http://www.google.com"),
+      mainLang = Some("en"),
+      pubTime = Some(DateTime.now.clicks),
+      category = Some(fullCategory),
+      sizeInfo = Some(fullSize),
+      extInfo = Some(fullExtInfo),
+      audioType = Some("AC5.1"),
+      videoType = Some("BDRip"),
+      postTime = Some(DateTime.now.clicks),
+      tvSeason = Some(1),
+      tvEpisode = Some(2),
+      numRatings = Some(32),
+      audioRating = Some(9.2f),
+      videoRating = Some(5.6f)
+    )
 
     "de-/serialize a Release" in {
-      val release = new Release(id = "123", dirname = Some("Dir Name"))
       val serializer = new MsgPackSerializer()
+      val values = Seq(
+        Release(id = "123"),
+        Release(id = "123", dirname = Some("dirname")),
+        Release(id = "123", linkHref = Some("http://www.google.com")),
+        Release(id = "123", mainLang = Some("en")),
+        Release(id = "123", pubTime = Some(DateTime.now.clicks)),
+        Release(id = "123", category = Some(fullCategory)),
+        Release(id = "123", sizeInfo = Some(fullSize)),
+        Release(id = "123", extInfo = Some(fullExtInfo)),
+        Release(id = "123", audioType = Some("AC5.1")),
+        Release(id = "123", videoType = Some("BDRip")),
+        Release(id = "123", postTime = Some(DateTime.now.clicks)),
+        Release(id = "123", tvSeason = Some(1)),
+        Release(id = "123", tvEpisode = Some(2)),
+        Release(id = "123", numRatings = Some(32)),
+        Release(id = "123", audioRating = Some(9.2f)),
+        Release(id = "123", videoRating = Some(5.6f)),
+        fullRelease
+      )
 
-      val binary = serializer.toBinary(release)
-
-      binary.size must be greaterThan(0)
-
-      val deserialized = serializer.fromBinary(binary, release.getClass)
-
-      deserialized.mustEqual(release)
+      checkSerialisation(serializer, values)
     }
 
-    "de-/serialize PagedReleases" in {
-      val paged = new PagedReleases(
-        page = 1,
-        totalPages = 1,
-        perPage = 1,
-        releases = Vector(new Release(id = "123", dirname = Some("Dir Name")))
+    val fullPagedReleases = PagedReleases(
+      page = 1, totalPages = 1, perPage = 2, releases = Set(
+        fullRelease,
+        fullRelease.copy(id = "321")
       )
+    )
+
+    "de-/serialize PagedReleases" in {
       val serializer = new MsgPackSerializer()
+      val values = Seq(
+        PagedReleases(page = 1, totalPages = 1, perPage = 2),
+        fullPagedReleases
+      )
 
-      val binary = serializer.toBinary(paged)
+      checkSerialisation(serializer, values)
+    }
 
-      binary.size must be greaterThan(0)
+    val fullQuerySceneReleases = QuerySceneReleases(year = 2013, month = 2, page = 1)
 
-      val deserialized = serializer.fromBinary(binary, paged.getClass)
+    "de-/serialize QuerySceneReleases" in {
+      val serializer = new MsgPackSerializer()
+      val values = Seq(
+        fullQuerySceneReleases
+      )
 
-      deserialized.mustEqual(paged)
+      checkSerialisation(serializer, values)
+    }
 
+    val fullQuerySceneReleasesResponse = QuerySceneReleasesResponse(
+      query = fullQuerySceneReleases,
+      result = Some(fullPagedReleases)
+    )
+
+    "de-/serialize QuerySceneReleasesResponse" in {
+      val serializer = new MsgPackSerializer()
+      val values = Seq(
+        QuerySceneReleasesResponse(query = fullQuerySceneReleases, result = None),
+        fullQuerySceneReleasesResponse
+      )
+
+      checkSerialisation(serializer, values)
+    }
+
+    val fullMovieDirectorySnapshot = MovieDirectorySnapshot(
+      year = 2013,
+      month = 2,
+      page = 12,
+      totalPages = 80,
+      releases = Set(
+        fullRelease,
+        fullRelease.copy(id = "321")
+      )
+    )
+
+    "de-/serialize MovieDirectorySnapshot" in {
+      val serializer = new MsgPackSerializer()
+      val values = Seq(
+        fullMovieDirectorySnapshot
+      )
+
+      checkSerialisation(serializer, values)
+    }
+
+    "de-/serialize MovieDirectorySnapshot with serializeSnapshot" in {
+      val serializer = new MsgPackSerializer()
+      val out = new ByteArrayOutputStream()
+      val metadata = SnapshotSaved(1, 2, 3)
+
+      serializer.serializeSnapshot(out, metadata, fullMovieDirectorySnapshot)
+
+      val data = out.toByteArray
+      val in = new ByteArrayInputStream(data)
+      val deserialized = serializer.deserializeSnapshot(in, metadata)
+
+      deserialized.mustEqual(fullMovieDirectorySnapshot)
     }
   }
 }

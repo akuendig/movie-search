@@ -7,7 +7,6 @@ import org.eligosource.eventsourced.journal.common.serialization.SnapshotSeriali
 import java.io.{InputStream, OutputStream}
 import org.eligosource.eventsourced.core.SnapshotMetadata
 import resource._
-import com.akuendig.movie.search.domain.MovieDirectorySnapshot
 
 
 class ScalaBufSerializer extends Serializer with SnapshotSerializer {
@@ -39,7 +38,8 @@ class ScalaBufSerializer extends Serializer with SnapshotSerializer {
         out.writeBoolNoTag(true)
         out.writeStringNoTag(m.getClass.getName)
         out.writeInt32NoTag(m.getSerializedSize)
-        out.writeMessageNoTag(m)
+
+        m.writeTo(out)
       }
       case _ =>
         for (out <- managed(CodedOutputStream.newInstance(stream))) {
@@ -65,14 +65,7 @@ class ScalaBufSerializer extends Serializer with SnapshotSerializer {
         val companionClazz = companion.getClass
         val builder: Builder = companionClazz.getDeclaredMethod("newBuilder").invoke(companion).asInstanceOf[Builder]
 
-        println(isProtobuf, className, clazz, companion, builder, size)
-
-        in.setSizeLimit(size + in.getTotalBytesRead + 1)
-
-        val message = in.readMessage(builder, ExtensionRegistryLite.getEmptyRegistry)
-
-        println(in.getTotalBytesRead, message.asInstanceOf[MovieDirectorySnapshot])
-        message
+        builder.mergeFrom(in)
       } else {
         SnapshotSerializer.java.deserializeSnapshot(stream, metadata)
       }
