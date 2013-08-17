@@ -1,7 +1,7 @@
 package com.akuendig.movie.search
 
-import com.akuendig.movie.search.domain.Release
 import scala.concurrent.stm.Ref
+import com.akuendig.movie.domain.Release
 
 
 class MovieDirectoryService(movieDirectory: Ref[Map[String, Release]]) {

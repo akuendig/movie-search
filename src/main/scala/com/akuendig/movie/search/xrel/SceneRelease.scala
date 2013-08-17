@@ -1,10 +1,6 @@
 package com.akuendig.movie.search.xrel
 
-import com.akuendig.movie.search.domain._
-import com.akuendig.movie.search.domain.Size
-import com.akuendig.movie.search.domain.Flags
-import com.akuendig.movie.search.domain.Release
-import com.akuendig.movie.search.domain.ExtInfo
+import com.akuendig.movie.domain._
 
 
 case class SceneRelease(

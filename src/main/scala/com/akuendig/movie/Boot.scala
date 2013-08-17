@@ -1,7 +1,7 @@
 package com.akuendig.movie
 
 
-import com.akuendig.movie.core.{ScalaBufSerializer, CoreActors, BootedCore}
+import com.akuendig.movie.core.{MsgPackSerializer, CoreActors, BootedCore}
 import com.akuendig.movie.api.ApiRoutes
 import com.akuendig.movie.search.MovieDirectoryActor
 import scala.concurrent.duration._
@@ -21,7 +21,7 @@ object Boot extends App with BootedCore with CoreActors with ApiRoutes with Web 
   lazy val journal: ActorRef = LeveldbJournalProps(
     dir = new File("eventlog/only-scene"),
     native = false,
-    snapshotSerializer = new ScalaBufSerializer()
+    snapshotSerializer = new MsgPackSerializer()
   ).createJournal
 
   private implicit val _ec: ExecutionContext = system.dispatcher

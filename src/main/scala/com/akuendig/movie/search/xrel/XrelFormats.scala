@@ -1,11 +1,7 @@
 package com.akuendig.movie.search.xrel
 
 import org.json4s.DefaultFormats
-import com.akuendig.movie.search.domain._
-import com.akuendig.movie.search.domain.Size
-import com.akuendig.movie.search.domain.Flags
-import com.akuendig.movie.search.domain.ExtInfo
-import com.akuendig.movie.search.domain.Category
+import com.akuendig.movie.domain._
 
 
 object XrelFormats extends DefaultFormats {

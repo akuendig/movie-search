@@ -1,9 +1,10 @@
 package com.akuendig.movie.search
 
 import akka.actor.{ActorLogging, Actor}
-import com.akuendig.movie.search.domain.PagedReleases
 import scala.util.{Failure, Success}
 import org.eligosource.eventsourced.core.Message
+import com.akuendig.movie.domain
+import com.akuendig.movie.domain.PagedReleases
 
 
 object MovieQueryActor {
@@ -17,6 +18,7 @@ object MovieQueryActor {
 class MovieQueryActor(xrelQueryService: XrelQueryService) extends Actor with ActorLogging {
 
   import MovieQueryActor._
+
   private implicit val _ = context.system.dispatcher
 
   def receive = {
@@ -31,7 +33,7 @@ class MovieQueryActor(xrelQueryService: XrelQueryService) extends Actor with Act
             releases.pagination.currentPage,
             releases.pagination.totalPages,
             releases.pagination.perPage,
-            releases.list.map(_.toRelease).to[Vector]
+            releases.list.map(_.toRelease).to[Set]
           )
 
           sndr ! Message(QuerySceneReleasesResponse(query, Some(genericReleases)))

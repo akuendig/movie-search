@@ -4,7 +4,7 @@ import akka.actor.{Actor, ActorRef}
 import org.eligosource.eventsourced.core.{SnapshotOffer, SnapshotRequest, Eventsourced, Receiver}
 import spray.http.DateTime
 import scala.concurrent.stm.Ref
-import com.akuendig.movie.search.domain.{QuerySceneReleasesResponse, QuerySceneReleases, Release}
+import com.akuendig.movie.domain.{QuerySceneReleasesResponse, QuerySceneReleases, Release}
 import spray.util.SprayActorLogging
 import com.akuendig.movie.core.IterableBackedSeq
 
@@ -15,8 +15,8 @@ object MovieDirectoryActor {
 
   case object MovieDirectoryPing
 
-  val MovieDirectorySnapshot = com.akuendig.movie.search.domain.MovieDirectorySnapshot
-  type MovieDirectorySnapshot = com.akuendig.movie.search.domain.MovieDirectorySnapshot
+  val MovieDirectorySnapshot = com.akuendig.movie.domain.MovieDirectorySnapshot
+  type MovieDirectorySnapshot = com.akuendig.movie.domain.MovieDirectorySnapshot
 
 }
 
@@ -87,20 +87,14 @@ class MovieDirectoryActor(queryRef: ActorRef, movieDirectory: Ref[Map[String, Re
         releases.size, q, directory.size
       )
     case sr: SnapshotRequest =>
-      type ReleaseSeq = scala.collection.immutable.Seq[Release]
-
       sr.process(MovieDirectorySnapshot(
         year = year,
         month = month,
         page = page,
         totalPages = totalPages,
-        movies = movieDirectory.single.get.values match {
-          case seq: ReleaseSeq => seq
-          case sn => new IterableBackedSeq(sn)
-        }
+        releases = movieDirectory.single.get.values.to[Set]
       ))
     case so: SnapshotOffer =>
-      println(s"$so")
       so.snapshot.state match {
         case MovieDirectorySnapshot(yr, mt, pg, tp, ms) =>
           year = yr

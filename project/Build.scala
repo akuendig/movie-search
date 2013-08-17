@@ -14,7 +14,7 @@ object BuildSettings {
     organization := buildOrganization,
     version := buildVersion,
     scalaVersion := buildScalaVersion,
-    scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
+    scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8", "-feature")
   )
 }
 
@@ -61,9 +61,9 @@ object Dependencies {
   lazy val scalaStm = "org.scala-stm" %% "scala-stm" % "0.7" % "compile"
   lazy val scalaArm = "com.jsuereth"  %% "scala-arm" % "1.3" % "compile"
 
-  lazy val thrift =        "org.apache.thrift"    % "libthrift"       % "0.9.0" % "compile"
-  lazy val scrooge =       "com.twitter"          %% "scrooge-core"   % "3.5.0" % "compile"
-  lazy val finagleThrift = "com.twitter"          %% "finagle-thrift" % "6.5.2" % "compile"
+//  lazy val thrift =        "org.apache.thrift"    % "libthrift"       % "0.9.0" % "compile"
+//  lazy val scrooge =       "com.twitter"          %% "scrooge-core"   % "3.5.0" % "compile"
+//  lazy val finagleThrift = "com.twitter"          %% "finagle-thrift" % "6.5.2" % "compile"
 
   lazy val msgpackJson = "com.googlecode.json-simple" % "json-simple" % "1.1.1" % "compile"
   lazy val msgpackJavassist = "org.javassist" % "javassist" % "3.16.1-GA" % "compile"
@@ -80,77 +80,6 @@ object Dependencies {
   lazy val selenium = "org.seleniumhq.selenium" % "selenium-java" % "2.28.0" % "test"
 }
 
-object ScalaBuffCustom {
-  val ScalaBuff = config("scalabuff").hide
-
-  val scalabuff = TaskKey[Seq[File]]("scalabuff", "Generate Scala sources from protocol buffers definitions")
-  val scalabuffArgs = SettingKey[Seq[String]]("scalabuff-args", "Extra command line parameters to scalabuff.")
-  val scalabuffMain = SettingKey[String]("scalabuff-main", "ScalaBuff main class.")
-  val scalabuffVersion =  SettingKey[String]("scalabuff-version", "ScalaBuff version.")
-
-  lazy val settings = Seq[Project.Setting[_]](
-    scalabuffArgs := Seq(),
-    scalabuffMain := "net.sandrogrzicic.scalabuff.compiler.ScalaBuff",
-    scalabuffVersion := "1.2.2",
-    libraryDependencies <++= (scalabuffVersion in ScalaBuff)(version =>
-      Seq(
-        "net.sandrogrzicic" %% "scalabuff-compiler" % version % ScalaBuff.name,
-        "net.sandrogrzicic" %% "scalabuff-runtime" % version
-      )
-    ),
-    sourceDirectory in ScalaBuff <<= (sourceDirectory in Compile),
-
-    managedClasspath in ScalaBuff <<= (classpathTypes, update) map { (ct, report) =>
-      Classpaths.managedJars(ScalaBuff, ct, report)
-    },
-
-    scalabuff <<= (
-      sourceDirectory in ScalaBuff,
-      sourceManaged in ScalaBuff,
-      scalabuffMain in ScalaBuff,
-      scalabuffArgs in ScalaBuff,
-      managedClasspath in ScalaBuff,
-      javaHome,
-      streams,
-      cacheDirectory
-      ).map(process),
-
-    sourceGenerators in Compile <+= (scalabuff).task
-  )
-
-  private def process(
-    source: File,
-    sourceManaged: File,
-    mainClass: String,
-    args: Seq[String],
-    classpath: Classpath,
-    javaHome: Option[File],
-    streams: TaskStreams,
-    cache: File
-  ): Seq[File] = {
-    val input = source / "protobuf"
-    if (input.exists) {
-      val output = sourceManaged / "scala"
-      val cached = FileFunction.cached(cache / "scalabuff", FilesInfo.lastModified, FilesInfo.exists) {
-        (in: Set[File]) => {
-          IO.delete(output)
-          IO.createDirectory(output)
-          Fork.java(
-            javaHome,
-            List(
-              "-cp", classpath.map(_.data).mkString(java.io.File.pathSeparator), mainClass,
-              "--scala_out=" + output.toString
-            ) ++ args.toSeq ++ in.toSeq.map(_.toString),
-            streams.log
-          )
-          (output ** ("*.scala")).get.toSet
-        }
-      }
-      cached((input ** "*.proto").get.toSet).toSeq
-    } else Nil
-  }
-}
-
 object MovieSearchBuild extends Build {
 
   import BuildSettings._
@@ -161,14 +90,14 @@ object MovieSearchBuild extends Build {
   lazy val example = Project(
     "movie-search",
     file("."),
-    settings = buildSettings ++ runSettings ++ ScalaBuffCustom.settings ++ Revolver.settings ++ Seq(
+    settings = buildSettings ++ runSettings ++ Revolver.settings ++ Seq(
       resolvers := Seq(springReleasesRepo, springNightlyRepo, typesafeRepo, eligosourceReleasesRepo, eligosourceSnapshotsRepo),
       // compile dependencies (backend)
-      libraryDependencies ++= Seq(akkaActor, scalaStm, scalaArm, msgpackJson, msgpackJavassist, esCore, esJournal, json4sJackson, thrift, scrooge, finagleThrift),
+      libraryDependencies ++= Seq(akkaActor, scalaStm, scalaArm, msgpackJson, msgpackJavassist, esCore, esJournal, json4sJackson),
       // compile dependencies (frontend)
       libraryDependencies ++= Seq(sprayCan, sprayClient, sprayRouting),
       // test dependencies
       libraryDependencies ++= Seq(sprayTestKit, akkaTestKit, specs2, scalaTest, selenium)
     )
-  ).configs(ScalaBuffCustom.ScalaBuff)
+  )
 }

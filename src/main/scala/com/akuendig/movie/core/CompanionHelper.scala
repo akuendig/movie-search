@@ -1,86 +1,12 @@
 package com.akuendig.movie.core
 
-import akka.serialization.Serializer
-import com.google.protobuf.{ExtensionRegistryLite, CodedInputStream, CodedOutputStream, MessageLite}
-import com.google.protobuf.MessageLite.Builder
-import org.eligosource.eventsourced.journal.common.serialization.SnapshotSerializer
-import java.io.{InputStream, OutputStream}
-import org.eligosource.eventsourced.core.SnapshotMetadata
-import resource._
-
-
-class ScalaBufSerializer extends Serializer with SnapshotSerializer {
-  val ARRAY_OF_BYTE_ARRAY = Array[Class[_]](classOf[Array[Byte]])
-
-  def includeManifest: Boolean = true
-
-  def identifier = 2
-
-  def toBinary(obj: AnyRef): Array[Byte] = obj match {
-    case m: MessageLite => m.toByteArray
-    case _ => throw new IllegalArgumentException("Can't serialize a non-protobuf message using protobuf [" + obj + "]")
-  }
-
-  def fromBinary(bytes: Array[Byte], clazz: Option[Class[_]]): AnyRef =
-    clazz match {
-      case None => throw new IllegalArgumentException("Need a protobuf message class to be able to serialize bytes using protobuf")
-      case Some(c) =>
-        val companion = CompanionHelper.companion(c)
-        val companionClazz = companion.getClass
-        val builder: Builder = companionClazz.getDeclaredMethod("newBuilder").invoke(companion).asInstanceOf[Builder]
-
-        builder.mergeFrom(bytes)
-    }
-
-  def serializeSnapshot(stream: OutputStream, metadata: SnapshotMetadata, state: Any) {
-    state match {
-      case m: MessageLite => for (out <- managed(CodedOutputStream.newInstance(stream))) {
-        out.writeBoolNoTag(true)
-        out.writeStringNoTag(m.getClass.getName)
-        out.writeInt32NoTag(m.getSerializedSize)
-
-        m.writeTo(out)
-      }
-      case _ =>
-        for (out <- managed(CodedOutputStream.newInstance(stream))) {
-          out.writeBoolNoTag(false)
-        }
-
-        SnapshotSerializer.java.serializeSnapshot(stream, metadata, state)
-        stream.flush()
-    }
-  }
-
-  def deserializeSnapshot(stream: InputStream, metadata: SnapshotMetadata): Any = {
-    val in = CodedInputStream.newInstance(stream)
-    val isProtobuf = in.readBool()
-
-    try {
-      if (isProtobuf) {
-        val className = in.readString()
-        val size = in.readInt32()
-
-        val clazz = Class.forName(className)
-        val companion = CompanionHelper.companion(clazz)
-        val companionClazz = companion.getClass
-        val builder: Builder = companionClazz.getDeclaredMethod("newBuilder").invoke(companion).asInstanceOf[Builder]
-
-        builder.mergeFrom(in)
-      } else {
-        SnapshotSerializer.java.deserializeSnapshot(stream, metadata)
-      }
-    } catch {
-      case t: Throwable => println(t); throw t
-    }
-  }
-
-  implicit val codedResource = new Resource[CodedOutputStream] {
-    def close(r: CodedOutputStream) {
-      r.flush()
-    }
-  }
-}
-
+/**
+ * Created with IntelliJ IDEA.
+ * User: adrian
+ * Date: 17.08.13
+ * Time: 13:17
+ * To change this template use File | Settings | File Templates.
+ */
 object CompanionHelper {
 
   def companion(clazz: Class[_]): AnyRef = {

@@ -1,11 +1,6 @@
 package com.akuendig.movie.search.xrel
 
-import com.akuendig.movie.search.domain._
-import com.akuendig.movie.search.domain.Group
-import com.akuendig.movie.search.domain.Release
-import com.akuendig.movie.search.domain.ExtInfo
-import scala.Some
-import com.akuendig.movie.search.domain.Category
+import com.akuendig.movie.domain._
 
 
 case class P2PRelease(
