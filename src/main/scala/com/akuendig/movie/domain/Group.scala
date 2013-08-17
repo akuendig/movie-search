@@ -6,7 +6,7 @@ import scala.reflect.runtime.universe._
 
 
 @Message final case class Group(
-  @Index(1) var id: String,
+  @Index(1) var id: String = "",
   @Index(2) var name: Option[String] = None
 ) extends HasTypeTag {
   def this() = this("")

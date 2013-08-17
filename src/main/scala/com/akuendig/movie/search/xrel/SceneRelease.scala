@@ -1,6 +1,8 @@
 package com.akuendig.movie.search.xrel
 
-import com.akuendig.movie.domain._
+import com.akuendig.movie.domain.intToPrimitive
+import com.akuendig.movie.domain.longToPrimitive
+import com.akuendig.movie.domain.Release
 
 
 case class SceneRelease(
@@ -33,9 +35,9 @@ case class SceneRelease(
       tvSeason = tvSeason,
       tvEpisode = tvEpisode,
 
-      sizeInfo = size,
+      sizeInfo = size.map(_.toDomain),
       pubTime = time,
-      extInfo = extInfo,
-      groupInfo = groupName.map[Group](n => Group(id = "", name = Some(n)))
+      extInfo = extInfo.map(_.toDomain),
+      groupInfo = groupName.map(n => Group(id = "", name = Some(n)).toDomain)
     )
 }

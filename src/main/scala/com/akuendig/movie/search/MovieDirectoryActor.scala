@@ -1,12 +1,11 @@
 package com.akuendig.movie.search
 
+import scala.concurrent.stm.Ref
 import akka.actor.{Actor, ActorRef}
 import org.eligosource.eventsourced.core.{SnapshotOffer, SnapshotRequest, Eventsourced, Receiver}
 import spray.http.DateTime
-import scala.concurrent.stm.Ref
-import com.akuendig.movie.domain.{QuerySceneReleasesResponse, QuerySceneReleases, Release}
 import spray.util.SprayActorLogging
-import com.akuendig.movie.core.IterableBackedSeq
+import com.akuendig.movie.domain.{QuerySceneReleasesResponse, QuerySceneReleases, Release}
 
 
 object MovieDirectoryActor {

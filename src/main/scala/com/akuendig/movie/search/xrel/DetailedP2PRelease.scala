@@ -1,6 +1,8 @@
 package com.akuendig.movie.search.xrel
 
-import com.akuendig.movie.domain._
+import com.akuendig.movie.domain.intToPrimitive
+import com.akuendig.movie.domain.longToPrimitive
+import com.akuendig.movie.domain.Release
 
 
 case class DetailedP2PRelease(
@@ -30,14 +32,14 @@ case class DetailedP2PRelease(
       mainLang = mainLang,
       pubTime = pubTime,
       postTime = postTime,
-      sizeInfo = sizeMB.map(Size(_, Some("MB"))),
+      sizeInfo = sizeMB.map(Size(_, Some("MB")).toDomain),
 
       numRatings = numRatings,
       tvSeason = tvSeason,
       tvEpisode = tvEpisode,
 
-      groupInfo = group,
-      category = category,
-      extInfo = extInfo
+      groupInfo = group.map(_.toDomain),
+      category = category.map(_.toDomain),
+      extInfo = extInfo.map(_.toDomain)
     )
 }

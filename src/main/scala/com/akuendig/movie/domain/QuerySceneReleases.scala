@@ -6,11 +6,11 @@ import scala.reflect.runtime.universe._
 
 
 @Message final case class QuerySceneReleases(
-  @Index(1) var year: Int,
-  @Index(2) var month: Int,
-  @Index(3) var page: Int
+  @Index(1) var year: Int = 0,
+  @Index(2) var month: Int = 0,
+  @Index(3) var page: Int = 0
 ) extends HasTypeTag {
-  def this() = this(0, 0, 0)
+  def this() = this(0)
 
   lazy val getTypeTag: TypeTag[_] = typeTag[QuerySceneReleases]
 }

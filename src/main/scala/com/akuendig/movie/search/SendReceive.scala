@@ -1,13 +1,13 @@
 package com.akuendig.movie.search
 
-import spray.http.{HttpResponse, HttpRequest}
+import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import akka.actor.ActorSystem
-import spray.can.Http
 import akka.io.IO
 import akka.pattern.ask
 import akka.util.Timeout
-import scala.concurrent.duration._
+import spray.can.Http
+import spray.http.{HttpResponse, HttpRequest}
 
 
 trait SendReceive {

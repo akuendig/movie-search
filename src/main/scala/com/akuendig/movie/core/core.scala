@@ -5,7 +5,7 @@ import org.eligosource.eventsourced.core._
 import com.akuendig.movie.search._
 import scala.concurrent.ExecutionContext
 import scala.concurrent.stm.Ref
-import com.akuendig.movie.domain.Release
+import com.akuendig.movie.domain.{MovieDirectoryService, Release}
 
 /**
  * Core is type containing the ``system: ActorSystem`` member. This enables us to use it in our

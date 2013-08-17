@@ -7,13 +7,14 @@ import spray.http._
 import org.json4s.JsonAST.JArray
 import java.io.{ByteArrayOutputStream, ObjectOutputStream}
 import com.akuendig.movie.search.xrel.{SceneRelease}
-import com.akuendig.movie.search.domain.{Release, PagedReleases}
+import com.akuendig.movie.domain.{Release, PagedReleases}
 import com.akuendig.movie.core.Core
 import akka.actor.ActorSystem
 import spray.http.MediaTypes._
 import akka.util.Timeout
 import scala.concurrent.duration
 import scala.concurrent.duration.Duration
+import org.json4s.DefaultFormats
 
 class XrelQueryServiceImplSpec extends TestKit(ActorSystem()) with Specification with Core {
   sequential
@@ -54,7 +55,7 @@ class XrelQueryServiceImplSpec extends TestKit(ActorSystem()) with Specification
         }
       }
 
-      implicit val formats = XrelFormats
+      implicit val formats = DefaultFormats
       val list = parse(jsonResultLatest.lines.drop(1).next) \ "payload" \ "list"
 
       for (item <- list.asInstanceOf[JArray].arr) {
@@ -76,7 +77,7 @@ class XrelQueryServiceImplSpec extends TestKit(ActorSystem()) with Specification
     "serialize the response mesage" in {
       import MovieQueryActor._
 
-      val instance = QuerySceneReleasesResponse(QuerySceneReleases(2013, 12, 1), Some(PagedReleases(1, 10, 100, Vector.empty[Release])))
+      val instance = QuerySceneReleasesResponse(QuerySceneReleases(2013, 12, 1), Some(PagedReleases(1, 10, 100, Set.empty[Release])))
       val out = new ObjectOutputStream(new ByteArrayOutputStream())
 
       out.writeObject(instance.result)

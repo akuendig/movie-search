@@ -6,7 +6,7 @@ import scala.reflect.runtime.universe._
 
 
 @Message final case class QuerySceneReleasesResponse(
-  @Index(1) var query: QuerySceneReleases,
+  @Index(1) var query: QuerySceneReleases = QuerySceneReleases(),
   @Index(2) var result: Option[PagedReleases] = None
 ) extends HasTypeTag {
   def this() = this(null)

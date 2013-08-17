@@ -68,14 +68,14 @@ class MsgPackSerializerSpec extends Specification {
     "de-/serialize a ExtInfo" in {
       val serializer = new MsgPackSerializer()
       val values = Seq(
-        ExtInfo(id = "123", tpe = "MOVIE", title = "RED"),
-        ExtInfo(id = "123", tpe = "MOVIE", title = "RED", linkHref = Some("http://www.google.com")),
-        ExtInfo(id = "123", tpe = "MOVIE", title = "RED", uris = Set("http://www.google.com")),
-        ExtInfo(id = "123", tpe = "MOVIE", title = "RED", numRatings = Some(12)),
-        ExtInfo(id = "123", tpe = "MOVIE", title = "RED", rating = Some(8.5f)),
-        ExtInfo(id = "123", tpe = "MOVIE", title = "RED", numRatings = Some(12), rating = Some(8.5f)),
-        ExtInfo(id = "123", tpe = "MOVIE", title = "RED", linkHref = Some("http://www.google.com"), numRatings = Some(12), rating = Some(8.5f)),
-        ExtInfo(id = "123", tpe = "MOVIE", title = "RED", uris = Set("http://www.google.com"), numRatings = Some(12), rating = Some(8.5f)),
+        new ExtInfo(id = "123", tpe = "MOVIE", title = "RED"),
+        new ExtInfo(id = "123", tpe = "MOVIE", title = "RED", linkHref = Some("http://www.google.com")),
+        new ExtInfo(id = "123", tpe = "MOVIE", title = "RED", uris = Set("http://www.google.com")),
+        new ExtInfo(id = "123", tpe = "MOVIE", title = "RED", numRatings = Some(12)),
+        new ExtInfo(id = "123", tpe = "MOVIE", title = "RED", rating = Some(8.5f)),
+        new ExtInfo(id = "123", tpe = "MOVIE", title = "RED", numRatings = Some(12), rating = Some(8.5f)),
+        new ExtInfo(id = "123", tpe = "MOVIE", title = "RED", linkHref = Some("http://www.google.com"), numRatings = Some(12), rating = Some(8.5f)),
+        new ExtInfo(id = "123", tpe = "MOVIE", title = "RED", uris = Set("http://www.google.com"), numRatings = Some(12), rating = Some(8.5f)),
         fullExtInfo
       )
 

@@ -1,21 +1,20 @@
 package com.akuendig.movie.search
 
-import scala.concurrent.{ExecutionContext, Future}
-import spray.http.{HttpResponse, StringRendering, Uri}
-import spray.http.Uri.Query
-import com.akuendig.movie.search.xrel._
 import akka.actor.ActorSystem
 import akka.event.Logging
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
+import spray.http.{HttpResponse, StringRendering, Uri}
+import spray.http.Uri.Query
 import spray.httpx.RequestBuilding._
-import com.akuendig.movie.domain.Category
+import com.akuendig.movie.search.xrel._
 
 
 abstract class XrelQueryServiceImpl(implicit val system: ActorSystem) extends XrelQueryService with SendReceive {
   val log = Logging(system, getClass)
 
   import org.json4s._
-  import org.json4s.native.JsonMethods._
+  import org.json4s.jackson.JsonMethods._
 
   private implicit val _fmts: Formats = DefaultFormats
   private implicit val _ec: ExecutionContext = system.dispatcher
@@ -68,6 +67,8 @@ abstract class XrelQueryServiceImpl(implicit val system: ActorSystem) extends Xr
 
             builder
         }.result
+
+        log.info("{}\n{}", releases.head, (fixFields(parse(data.entity.asString.lines.drop(1).next)) \ "payload" \ "list").asInstanceOf[JArray].arr.head)
 
         PagedSceneReleases(totalCount, pagination, releases)
     }

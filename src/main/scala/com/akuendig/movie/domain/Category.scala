@@ -6,7 +6,7 @@ import scala.reflect.runtime.universe._
 
 
 @Message final case class Category(
-  @Index(1) var id: String,
+  @Index(1) var id: String= "",
   @Index(2) var metaCat: Option[String] = None,
   @Index(3) var subCat: Option[String] = None
 ) extends HasTypeTag {

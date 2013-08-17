@@ -2,7 +2,6 @@ package com.akuendig.movie.search
 
 import scala.concurrent.Future
 import com.akuendig.movie.search.xrel._
-import com.akuendig.movie.domain.Category
 
 
 trait XrelQueryService {

@@ -6,7 +6,7 @@ import scala.reflect.runtime.universe._
 
 
 @Message final case class Release(
-  @Index(1) var id: String,
+  @Index(1) var id: String = "",
 
   @Index(2) var dirname: Option[String] = None,
   @Index(3) var linkHref: Option[String] = None,

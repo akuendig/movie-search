@@ -32,7 +32,7 @@ object Boot extends App with BootedCore with CoreActors with ApiRoutes with Web 
   //  extension.recover()
 
   def takeSnapshot {
-    implicit val timeout = Timeout(1 minute)
+    implicit val timeout = Timeout(1.minute)
 
     (directoryRef ? SnapshotRequest).mapTo[SnapshotSaved].onComplete {
       case Success(saved) =>
