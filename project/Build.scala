@@ -71,8 +71,8 @@ object Dependencies {
   //  lazy val protoBuf =      "com.google.protobuf"  % "protobuf-java"   % "2.5.0" % "compile"
   //  lazy val scalaBuff = "net.sandrogrzicic" %%  "scalabuff-compiler" % "1.1.1" % "compile"
 
-//  lazy val json4sJackson = "org.json4s" %% "json4s-jackson" % "3.2.2" % "compile"
-  lazy val json4sNative = "org.json4s" %% "json4s-native" % "3.2.5" % "compile"
+  lazy val json4sJackson = "org.json4s" %% "json4s-jackson" % "3.2.5" % "compile"
+//  lazy val json4sNative = "org.json4s" %% "json4s-native" % "3.2.5" % "compile"
 
   lazy val specs2 = "org.specs2" %% "specs2" % "1.13" % "test"
 
@@ -94,7 +94,7 @@ object MovieSearchBuild extends Build {
     settings = buildSettings ++ runSettings ++ Revolver.settings ++ Seq(
       resolvers := Seq(springReleasesRepo, springNightlyRepo, typesafeRepo, eligosourceReleasesRepo, eligosourceSnapshotsRepo),
       // compile dependencies (backend)
-      libraryDependencies ++= Seq(akkaActor, scalaStm, scalaArm, msgpackJson, msgpackJavassist, esCore, esJournal, json4sNative),
+      libraryDependencies ++= Seq(akkaActor, scalaStm, scalaArm, msgpackJson, msgpackJavassist, esCore, esJournal, json4sJackson),
       // compile dependencies (frontend)
       libraryDependencies ++= Seq(sprayCan, sprayClient, sprayRouting),
       // test dependencies
