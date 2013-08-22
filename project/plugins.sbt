@@ -2,7 +2,7 @@ resolvers += "Sonatype snapshots" at "http://oss.sonatype.org/content/repositori
 
 addSbtPlugin("com.github.mpeltonen" % "sbt-idea" % "1.6.0-SNAPSHOT")
 
-addSbtPlugin("io.spray" % "sbt-revolver" % "0.6.2")
+addSbtPlugin("io.spray" % "sbt-revolver" % "0.7.1")
 
 // addSbtPlugin("com.github.sbt" %% "sbt-scalabuff" % "0.2")
 

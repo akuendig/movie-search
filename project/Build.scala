@@ -20,7 +20,9 @@ object BuildSettings {
 
 object RunSettings {
   val runSettings = Seq(
-    javaOptions in run += "-Xmx1GB"
+    javaOptions in run += "-Xmx4G",
+    javaOptions in Revolver.reStart ++= Seq("-Xmx4G", "-Dcom.sun.management.jmxremote", "-Dcom.sun.management.jmxremote.ssl=false", "-Dcom.sun.management.jmxremote.authenticate=false"),
+    Revolver.enableDebugging(suspend = false)
   )
 }
 
@@ -68,6 +70,8 @@ object Dependencies {
   lazy val msgpackJson = "com.googlecode.json-simple" % "json-simple" % "1.1.1" % "compile"
   lazy val msgpackJavassist = "org.javassist" % "javassist" % "3.16.1-GA" % "compile"
 
+  lazy val slick = "com.typesafe.slick" %% "slick" % "2.0.0-M2"
+
   //  lazy val protoBuf =      "com.google.protobuf"  % "protobuf-java"   % "2.5.0" % "compile"
   //  lazy val scalaBuff = "net.sandrogrzicic" %%  "scalabuff-compiler" % "1.1.1" % "compile"
 
@@ -91,10 +95,10 @@ object MovieSearchBuild extends Build {
   lazy val example = Project(
     "movie-search",
     file("."),
-    settings = buildSettings ++ runSettings ++ Revolver.settings ++ Seq(
+    settings = buildSettings ++ Revolver.settings ++ runSettings ++ Seq(
       resolvers := Seq(springReleasesRepo, springNightlyRepo, typesafeRepo, eligosourceReleasesRepo, eligosourceSnapshotsRepo),
       // compile dependencies (backend)
-      libraryDependencies ++= Seq(akkaActor, scalaStm, scalaArm, msgpackJson, msgpackJavassist, esCore, esJournal, json4sJackson),
+      libraryDependencies ++= Seq(akkaActor, scalaStm, scalaArm, msgpackJson, msgpackJavassist, esCore, esJournal, json4sJackson, slick),
       // compile dependencies (frontend)
       libraryDependencies ++= Seq(sprayCan, sprayClient, sprayRouting),
       // test dependencies

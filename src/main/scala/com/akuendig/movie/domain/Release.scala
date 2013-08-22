@@ -1,7 +1,7 @@
 package com.akuendig.movie.domain
 
 import org.msgpack.annotation.{Message, Index}
-import java.lang.{Integer => Int, Long, Float, Double}
+import java.lang.{Integer => Int, Long, Float}
 import scala.reflect.runtime.universe._
 
 
@@ -29,8 +29,11 @@ import scala.reflect.runtime.universe._
   @Index(15) var numRatings: Option[Int] = None,
   @Index(16) var audioRating: Option[Float] = None,
   @Index(17) var videoRating: Option[Float] = None
-) extends HasTypeTag {
+) extends HasTypeTag with ReleaseLike {
   def this() = this("")
 
   lazy val getTypeTag: TypeTag[_] = typeTag[Release]
 }
+
+
+

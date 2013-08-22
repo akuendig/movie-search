@@ -5,7 +5,8 @@ import akka.actor.{Actor, ActorRef}
 import org.eligosource.eventsourced.core.{SnapshotOffer, SnapshotRequest, Eventsourced, Receiver}
 import spray.http.DateTime
 import spray.util.SprayActorLogging
-import com.akuendig.movie.domain.{QuerySceneReleasesResponse, QuerySceneReleases, Release}
+import com.akuendig.movie.domain.{ReleaseLike, QuerySceneReleasesResponse, QuerySceneReleases, Release}
+import com.akuendig.movie.core.IterableBackedSeq
 
 
 object MovieDirectoryActor {
@@ -19,7 +20,7 @@ object MovieDirectoryActor {
 
 }
 
-class MovieDirectoryActor(queryRef: ActorRef, movieDirectory: Ref[Map[String, Release]]) extends Actor with SprayActorLogging {
+class MovieDirectoryActor(queryRef: ActorRef, movieDirectory: Ref[Map[String, ReleaseLike]]) extends Actor with SprayActorLogging {
   this: Receiver with Eventsourced =>
 
   //  import MovieQueryActor._
@@ -91,7 +92,7 @@ class MovieDirectoryActor(queryRef: ActorRef, movieDirectory: Ref[Map[String, Re
         month = month,
         page = page,
         totalPages = totalPages,
-        releases = movieDirectory.single.get.values.to[Set]
+        releases = new IterableBackedSeq(movieDirectory.single.get.values)
       ))
     case so: SnapshotOffer =>
       so.snapshot.state match {
@@ -100,7 +101,15 @@ class MovieDirectoryActor(queryRef: ActorRef, movieDirectory: Ref[Map[String, Re
           month = mt
           page = pg
           totalPages = tp
-          movieDirectory.single.set((ms.map(_.id), ms).zipped.toMap)
+
+          val builder = Map.newBuilder[String, ReleaseLike]
+          builder.sizeHint(ms)
+
+          for (r <- ms) {
+            builder += ((r.id, r))
+          }
+
+          movieDirectory.single.set(builder.result())
 
           log.info("Successfully recovered from {}", SnapshotOffer(so.snapshot.copy(state = "State removed for logging")))
         case _ =>

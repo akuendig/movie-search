@@ -10,7 +10,7 @@ import scala.reflect.runtime.universe._
   @Index(2) var month: Int = 0,
   @Index(3) var page: Int = 0,
   @Index(4) var totalPages: Int = 0,
-  @Index(5) var releases: Set[Release] = Set.empty
+  @Index(5) var releases: Seq[ReleaseLike] = Seq.empty
 ) extends HasTypeTag {
   def this() = this(0)
 
