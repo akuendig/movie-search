@@ -174,7 +174,7 @@ class MsgPackSerializerSpec extends Specification {
       month = 2,
       page = 12,
       totalPages = 80,
-      releases = Set(
+      releases = Seq(
         fullRelease,
         fullRelease.copy(id = "321")
       )
@@ -186,7 +186,14 @@ class MsgPackSerializerSpec extends Specification {
         fullMovieDirectorySnapshot
       )
 
-      checkSerialisation(serializer, values)
+      val serialized = values.map(serializer.toBinary)
+      val deserialized = serialized
+        .map(serializer.fromBinary(_, classOf[MovieDirectorySnapshot]).asInstanceOf[MovieDirectorySnapshot])
+
+      for ((orig, deser) <- (values, deserialized).zipped) {
+        forall(deser.releases)(_ must beAnInstanceOf[CompressedRelease])
+        deser.copy(releases = deser.releases.map(_.asInstanceOf[CompressedRelease].read)).mustEqual(fullMovieDirectorySnapshot)
+      }
     }
 
     "de-/serialize MovieDirectorySnapshot with serializeSnapshot" in {
@@ -198,9 +205,10 @@ class MsgPackSerializerSpec extends Specification {
 
       val data = out.toByteArray
       val in = new ByteArrayInputStream(data)
-      val deserialized = serializer.deserializeSnapshot(in, metadata)
+      val deserialized = serializer.deserializeSnapshot(in, metadata).asInstanceOf[MovieDirectorySnapshot]
 
-      deserialized.mustEqual(fullMovieDirectorySnapshot)
+      forall(deserialized.releases)(_ must beAnInstanceOf[CompressedRelease])
+      deserialized.copy(releases = deserialized.releases.map(_.asInstanceOf[CompressedRelease].read)).mustEqual(fullMovieDirectorySnapshot)
     }
   }
 }

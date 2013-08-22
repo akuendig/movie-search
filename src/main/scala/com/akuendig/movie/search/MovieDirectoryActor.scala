@@ -2,10 +2,17 @@ package com.akuendig.movie.search
 
 import scala.concurrent.stm.Ref
 import akka.actor.{Actor, ActorRef}
-import org.eligosource.eventsourced.core.{SnapshotOffer, SnapshotRequest, Eventsourced, Receiver}
+import org.eligosource.eventsourced.core.{SnapshotRequest, Eventsourced, Receiver}
 import spray.http.DateTime
 import spray.util.SprayActorLogging
-import com.akuendig.movie.domain.{QuerySceneReleasesResponse, QuerySceneReleases, Release}
+import com.akuendig.movie.domain._
+import com.akuendig.movie.core.IterableBackedSeq
+import com.akuendig.movie.domain.QuerySceneReleasesResponse
+import com.akuendig.movie.domain.Release
+import com.akuendig.movie.domain.QuerySceneReleases
+import scala.Some
+import org.eligosource.eventsourced.core.SnapshotOffer
+import akka.serialization.{Serializer, SerializationExtension}
 
 
 object MovieDirectoryActor {
@@ -19,7 +26,7 @@ object MovieDirectoryActor {
 
 }
 
-class MovieDirectoryActor(queryRef: ActorRef, movieDirectory: Ref[Map[String, Release]]) extends Actor with SprayActorLogging {
+class MovieDirectoryActor(queryRef: ActorRef, movieDirectory: Ref[Map[String, ReleaseLike]]) extends Actor with SprayActorLogging {
   this: Receiver with Eventsourced =>
 
   //  import MovieQueryActor._
@@ -38,6 +45,8 @@ class MovieDirectoryActor(queryRef: ActorRef, movieDirectory: Ref[Map[String, Re
   var totalPages = -1
 
   var waitingForResponse = false
+
+  val serializer = SerializationExtension(context.system).serializerFor(classOf[Release])
 
   def receive: Receive = {
     case MovieDirectoryPing if !waitingForResponse =>
@@ -76,7 +85,12 @@ class MovieDirectoryActor(queryRef: ActorRef, movieDirectory: Ref[Map[String, Re
 
       // Update the directory
       val releases = paged.releases
-      val directory = movieDirectory.single.transformAndGet(_ ++ (releases.map(_.id), releases).zipped)
+      val _serializer = serializer
+      def compressed(r: Release): CompressedRelease =
+        new CompressedRelease(serializer.toBinary(r)) {
+          def serializer: Serializer = _serializer
+        }
+      val directory = movieDirectory.single.transformAndGet(_ ++ releases.map(r => (r.id, compressed(r))))
 
       // Remember which pages are fetched
       receivedPages += ((yr, month, page))
@@ -91,7 +105,7 @@ class MovieDirectoryActor(queryRef: ActorRef, movieDirectory: Ref[Map[String, Re
         month = month,
         page = page,
         totalPages = totalPages,
-        releases = movieDirectory.single.get.values.to[Set]
+        releases = new IterableBackedSeq(movieDirectory.single.get.values)
       ))
     case so: SnapshotOffer =>
       so.snapshot.state match {
@@ -100,7 +114,15 @@ class MovieDirectoryActor(queryRef: ActorRef, movieDirectory: Ref[Map[String, Re
           month = mt
           page = pg
           totalPages = tp
-          movieDirectory.single.set((ms.map(_.id), ms).zipped.toMap)
+
+          val builder = Map.newBuilder[String, ReleaseLike]
+          builder.sizeHint(ms)
+
+          for (release <- ms) {
+            builder += ((release.id, release))
+          }
+
+          movieDirectory.single.set(builder.result())
 
           log.info("Successfully recovered from {}", SnapshotOffer(so.snapshot.copy(state = "State removed for logging")))
         case _ =>

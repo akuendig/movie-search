@@ -5,7 +5,7 @@ import org.eligosource.eventsourced.core._
 import com.akuendig.movie.search._
 import scala.concurrent.ExecutionContext
 import scala.concurrent.stm.Ref
-import com.akuendig.movie.domain.{MovieDirectoryService, Release}
+import com.akuendig.movie.domain.{ReleaseLike, MovieDirectoryService, Release}
 
 /**
  * Core is type containing the ``system: ActorSystem`` member. This enables us to use it in our
@@ -50,7 +50,7 @@ trait CoreActors {
   val extension = EventsourcingExtension(system, journal)
 
   // Create the movie directory. Only the DirectoryActor is allowed to write
-  val movieDirectory: Ref[Map[String, Release]] = Ref(Map.empty[String, Release])
+  val movieDirectory: Ref[Map[String, ReleaseLike]] = Ref(Map.empty[String, ReleaseLike])
 
   // Create the querying actor communicating with the different external services
   val queryRef: ActorRef = system.actorOf(Props(new MovieQueryActor(new XrelQueryServiceImpl with SpraySendReceive)))

@@ -20,7 +20,9 @@ object BuildSettings {
 
 object RunSettings {
   val runSettings = Seq(
-    javaOptions in run += "-Xmx1GB"
+    javaOptions in run += "-Xmx4G",
+    javaOptions in Revolver.reStart ++= Seq("-Xmx4G", "-Dcom.sun.management.jmxremote", "-Dcom.sun.management.jmxremote.ssl=false", "-Dcom.sun.management.jmxremote.authenticate=false"),
+    Revolver.enableDebugging(port = 5050, suspend = false)
   )
 }
 
@@ -91,7 +93,7 @@ object MovieSearchBuild extends Build {
   lazy val example = Project(
     "movie-search",
     file("."),
-    settings = buildSettings ++ runSettings ++ Revolver.settings ++ Seq(
+    settings = buildSettings ++ Revolver.settings ++ runSettings ++ Seq(
       resolvers := Seq(springReleasesRepo, springNightlyRepo, typesafeRepo, eligosourceReleasesRepo, eligosourceSnapshotsRepo),
       // compile dependencies (backend)
       libraryDependencies ++= Seq(akkaActor, scalaStm, scalaArm, msgpackJson, msgpackJavassist, esCore, esJournal, json4sJackson),

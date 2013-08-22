@@ -1,7 +1,7 @@
 package com.akuendig.movie
 
 
-import com.akuendig.movie.core.{MsgPackSerializer, CoreActors, BootedCore}
+import com.akuendig.movie.core.{KnowsSerializer, MsgPackSerializer, CoreActors, BootedCore}
 import com.akuendig.movie.api.ApiRoutes
 import com.akuendig.movie.search.MovieDirectoryActor
 import scala.concurrent.duration._
@@ -13,6 +13,8 @@ import org.eligosource.eventsourced.core.{SnapshotSaved, SnapshotRequest}
 import akka.pattern.ask
 import scala.util.{Failure, Success}
 import akka.util.Timeout
+import akka.serialization.Serializer
+import org.eligosource.eventsourced.journal.common.serialization.SnapshotSerializer
 
 
 object Boot extends App with BootedCore with CoreActors with ApiRoutes with Web {
@@ -21,18 +23,20 @@ object Boot extends App with BootedCore with CoreActors with ApiRoutes with Web 
   lazy val journal: ActorRef = LeveldbJournalProps(
     dir = new File("eventlog/only-scene"),
     native = false,
-    snapshotSerializer = new MsgPackSerializer()
+    snapshotSerializer = new MsgPackSerializer(),
+    snapshotLoadTimeout = 5.minutes,
+    snapshotSaveTimeout = 5.minutes
   ).createJournal
 
   private implicit val _ec: ExecutionContext = system.dispatcher
 
   // recover registered processors by replaying journaled events
-  extension.recover(extension.replayParams.allWithSnapshot)
+  extension.recover(extension.replayParams.allWithSnapshot, 5.minutes)
 
   //  extension.recover()
 
   def takeSnapshot {
-    implicit val timeout = Timeout(1.minute)
+    implicit val timeout = Timeout(5.minutes)
 
     (directoryRef ? SnapshotRequest).mapTo[SnapshotSaved].onComplete {
       case Success(saved) =>
@@ -42,6 +46,6 @@ object Boot extends App with BootedCore with CoreActors with ApiRoutes with Web 
     }
   }
 
-  system.scheduler.schedule(1.minute, 30.minutes)(takeSnapshot)
-  system.scheduler.schedule(1.second, 15.seconds, directoryRef, MovieDirectoryActor.MovieDirectoryPing)
+  system.scheduler.schedule(30.minute, 30.minutes)(takeSnapshot)
+//  system.scheduler.schedule(1.second, 15.seconds, directoryRef, MovieDirectoryActor.MovieDirectoryPing)
 }

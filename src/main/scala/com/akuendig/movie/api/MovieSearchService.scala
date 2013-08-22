@@ -15,11 +15,24 @@ class MovieSearchService(service: MovieDirectoryService)(implicit executionConte
 
   val route =
     pathPrefix("api") {
-      path("movies") {
-        get {
-          parameters('skip.as[Int] ? 0, 'take.as[Int] ? 10) {
-            (skip, take) =>
-              complete(service.getMovies.values.drop(skip).take(take))
+      pathPrefix("movies") {
+        path("") {
+          get {
+            parameters('skip.as[Int] ? 0, 'take.as[Int] ? 10) {
+              (skip, take) =>
+                complete(service.getMovies.values.drop(skip).take(take))
+            }
+          }
+        } ~
+        path("size") {
+          get {
+            complete {
+              val allMovies = service.getMovies.values.view
+              val grouped = allMovies.groupBy(_.extInfo.get.title.toLowerCase)
+              val groupedSize = grouped.size
+
+              s"Movies with same title: $groupedSize"
+            }
           }
         }
       }
