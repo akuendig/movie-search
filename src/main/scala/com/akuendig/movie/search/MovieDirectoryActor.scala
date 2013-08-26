@@ -7,6 +7,8 @@ import spray.http.DateTime
 import spray.util.SprayActorLogging
 import com.akuendig.movie.domain.{ReleaseLike, QuerySceneReleasesResponse, QuerySceneReleases, Release}
 import com.akuendig.movie.core.IterableBackedSeq
+import scala.slick.jdbc.JdbcBackend
+import scala.slick.direct._
 
 
 object MovieDirectoryActor {
@@ -39,6 +41,9 @@ class MovieDirectoryActor(queryRef: ActorRef, movieDirectory: Ref[Map[String, Re
   var totalPages = -1
 
   var waitingForResponse = false
+
+//  val db = JdbcBackend.Database.forURL("jdbc:h2:mem:test1", driver = "org.h2.Driver")
+//  val backend = new SlickBackend(scala.slick.driver.H2Driver, AnnotationMapper)
 
   def receive: Receive = {
     case MovieDirectoryPing if !waitingForResponse =>
@@ -101,6 +106,17 @@ class MovieDirectoryActor(queryRef: ActorRef, movieDirectory: Ref[Map[String, Re
           month = mt
           page = pg
           totalPages = tp
+//
+//          db.withSession { implicit session =>
+//            import scala.reflect.runtime.universe._
+//            val query = Queryable[Release]
+//            val q = backend.typetagToQuery(typeTag[Release])
+//            val sql = backend.driver.createInsertBuilder(q.node)
+//            backend.
+//
+//
+//            backend.result(query, session)
+//          }
 
           val builder = Map.newBuilder[String, ReleaseLike]
           builder.sizeHint(ms)

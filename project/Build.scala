@@ -70,6 +70,7 @@ object Dependencies {
   lazy val msgpackJson = "com.googlecode.json-simple" % "json-simple" % "1.1.1" % "compile"
   lazy val msgpackJavassist = "org.javassist" % "javassist" % "3.16.1-GA" % "compile"
 
+  lazy val h2 = "com.h2database" % "h2" % "1.3.173"
   lazy val slick = "com.typesafe.slick" %% "slick" % "2.0.0-M2"
 
   //  lazy val protoBuf =      "com.google.protobuf"  % "protobuf-java"   % "2.5.0" % "compile"
@@ -98,7 +99,7 @@ object MovieSearchBuild extends Build {
     settings = buildSettings ++ Revolver.settings ++ runSettings ++ Seq(
       resolvers := Seq(springReleasesRepo, springNightlyRepo, typesafeRepo, eligosourceReleasesRepo, eligosourceSnapshotsRepo),
       // compile dependencies (backend)
-      libraryDependencies ++= Seq(akkaActor, scalaStm, scalaArm, msgpackJson, msgpackJavassist, esCore, esJournal, json4sJackson, slick),
+      libraryDependencies ++= Seq(akkaActor, scalaStm, scalaArm, msgpackJson, msgpackJavassist, esCore, esJournal, json4sJackson, h2, slick),
       // compile dependencies (frontend)
       libraryDependencies ++= Seq(sprayCan, sprayClient, sprayRouting),
       // test dependencies
