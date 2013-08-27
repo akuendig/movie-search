@@ -13,3 +13,4 @@ test-output/
 *.log
 
 /src/main/resources/webapp
+/src/main/resources/secrets.conf

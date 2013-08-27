@@ -54,11 +54,12 @@ object Dependencies {
   lazy val sprayTestKit = "io.spray" % "spray-testkit"  % sprayVersion % "test"
 
   lazy val akkaActor =   "com.typesafe.akka"  %% "akka-actor"   % akkaVersion % "compile"
+  lazy val akkaContrib = "com.typesafe.akka"  %% "akka-contrib" % akkaVersion % "compile"
 //  lazy val akkaRemote =  "com.typesafe.akka"  %% "akka-remote"  % akkaVersion % "compile"
   lazy val akkaTestKit = "com.typesafe.akka"  %% "akka-testkit" % akkaVersion % "test"
 
-  lazy val esCore =    "org.eligosource"  %% "eventsourced-core"            % "0.6-SNAPSHOT" % "compile"
-  lazy val esJournal = "org.eligosource"  %% "eventsourced-journal-leveldb" % "0.6-SNAPSHOT" % "compile"
+  lazy val esCore =    "org.eligosource"  %% "eventsourced-core"            % "0.7-SNAPSHOT" % "compile"
+  lazy val esJournal = "org.eligosource"  %% "eventsourced-journal-leveldb" % "0.7-SNAPSHOT" % "compile"
 
   lazy val scalaStm = "org.scala-stm" %% "scala-stm" % "0.7" % "compile"
   lazy val scalaArm = "com.jsuereth"  %% "scala-arm" % "1.3" % "compile"
@@ -72,6 +73,11 @@ object Dependencies {
 
   lazy val h2 = "com.h2database" % "h2" % "1.3.173"
   lazy val slick = "com.typesafe.slick" %% "slick" % "2.0.0-M2"
+
+  lazy val reactiveMongo = ("org.reactivemongo" %% "reactivemongo" % "0.9-AKKA-2.2.0"  % "compile")
+    .exclude("ch.qos.logback", "logback-core")
+    .exclude("ch.qos.logback", "logback-classic")
+    .exclude("org.scala-stm", "scala-stm_2.10.0")
 
   //  lazy val protoBuf =      "com.google.protobuf"  % "protobuf-java"   % "2.5.0" % "compile"
   //  lazy val scalaBuff = "net.sandrogrzicic" %%  "scalabuff-compiler" % "1.1.1" % "compile"
@@ -92,14 +98,16 @@ object MovieSearchBuild extends Build {
   import RunSettings._
   import Resolvers._
   import Dependencies._
+  lazy val versionReport = TaskKey[String]("version-report")
 
+  // Add this setting to your project.
   lazy val example = Project(
     "movie-search",
     file("."),
     settings = buildSettings ++ Revolver.settings ++ runSettings ++ Seq(
       resolvers := Seq(springReleasesRepo, springNightlyRepo, typesafeRepo, eligosourceReleasesRepo, eligosourceSnapshotsRepo),
       // compile dependencies (backend)
-      libraryDependencies ++= Seq(akkaActor, scalaStm, scalaArm, msgpackJson, msgpackJavassist, esCore, esJournal, json4sJackson, h2, slick),
+      libraryDependencies ++= Seq(akkaActor, akkaContrib, scalaStm, scalaArm, msgpackJson, msgpackJavassist, esCore, esJournal, json4sJackson, h2, slick, reactiveMongo),
       // compile dependencies (frontend)
       libraryDependencies ++= Seq(sprayCan, sprayClient, sprayRouting),
       // test dependencies

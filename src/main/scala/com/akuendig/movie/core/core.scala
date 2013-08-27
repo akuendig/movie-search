@@ -3,9 +3,12 @@ package com.akuendig.movie.core
 import akka.actor.{ActorRef, Props, ActorSystem}
 import org.eligosource.eventsourced.core._
 import com.akuendig.movie.search._
+import com.akuendig.movie.domain.MovieDirectoryService
+import com.akuendig.movie.ChannelIds
+import akka.contrib.throttle.Throttler._
+import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
-import scala.concurrent.stm.Ref
-import com.akuendig.movie.domain.{ReleaseLike, MovieDirectoryService}
+import akka.contrib.throttle.TimerBasedThrottler
 
 /**
  * Core is type containing the ``system: ActorSystem`` member. This enables us to use it in our
@@ -49,16 +52,19 @@ trait CoreActors {
   // Create an event-sourcing extension
   val extension = EventsourcingExtension(system, journal)
 
-  // Create the movie directory. Only the DirectoryActor is allowed to write
-  val movieDirectory: Ref[Map[String, ReleaseLike]] = Ref(Map.empty[String, ReleaseLike])
-
   // Create the querying actor communicating with the different external services
   val queryRef: ActorRef = system.actorOf(Props(new MovieQueryActor(new XrelQueryServiceImpl with SpraySendReceive)))
 
+  val readModelRef: ActorRef = system.actorOf(Props(new MongoDbReadModel() with Receiver))
+  val readModelThrottler = system.actorOf(Props(classOf[TimerBasedThrottler], 10.msgsPerSecond))
+  val readModelChannel: ActorRef = extension.channelOf(DefaultChannelProps(ChannelIds.MongoDbReadModelTestChannel, readModelThrottler))
+  // Set the target
+  readModelThrottler ! SetTarget(Some(readModelRef))
+
   // Create the actor responsible for updating the movie directory
-  val directoryRef: ActorRef = extension.processorOf(Props(new MovieDirectoryActor(queryRef, movieDirectory) with Receiver with Eventsourced {
+  val directoryRef: ActorRef = extension.processorOf(Props(new MovieDirectoryActor(queryRef, readModelChannel) with Receiver with Eventsourced {
     val id = 1
   }))
 
-  val directoryService = new MovieDirectoryService(movieDirectory)
+  val directoryService = new MovieDirectoryService()
 }

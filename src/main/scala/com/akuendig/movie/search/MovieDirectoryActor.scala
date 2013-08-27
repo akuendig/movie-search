@@ -1,14 +1,10 @@
 package com.akuendig.movie.search
 
-import scala.concurrent.stm.Ref
 import akka.actor.{Actor, ActorRef}
 import org.eligosource.eventsourced.core.{SnapshotOffer, SnapshotRequest, Eventsourced, Receiver}
 import spray.http.DateTime
 import spray.util.SprayActorLogging
-import com.akuendig.movie.domain.{ReleaseLike, QuerySceneReleasesResponse, QuerySceneReleases, Release}
-import com.akuendig.movie.core.IterableBackedSeq
-import scala.slick.jdbc.JdbcBackend
-import scala.slick.direct._
+import com.akuendig.movie.domain.{QuerySceneReleasesResponse, QuerySceneReleases}
 
 
 object MovieDirectoryActor {
@@ -22,12 +18,11 @@ object MovieDirectoryActor {
 
 }
 
-class MovieDirectoryActor(queryRef: ActorRef, movieDirectory: Ref[Map[String, ReleaseLike]]) extends Actor with SprayActorLogging {
+class MovieDirectoryActor(queryRef: ActorRef, readModel: ActorRef) extends Actor with SprayActorLogging {
   this: Receiver with Eventsourced =>
 
-  //  import MovieQueryActor._
-
   import MovieDirectoryActor._
+  import MongoDbReadModel._
 
   val startedAt = DateTime.now
 
@@ -42,8 +37,8 @@ class MovieDirectoryActor(queryRef: ActorRef, movieDirectory: Ref[Map[String, Re
 
   var waitingForResponse = false
 
-//  val db = JdbcBackend.Database.forURL("jdbc:h2:mem:test1", driver = "org.h2.Driver")
-//  val backend = new SlickBackend(scala.slick.driver.H2Driver, AnnotationMapper)
+  //  val db = JdbcBackend.Database.forURL("jdbc:h2:mem:test1", driver = "org.h2.Driver")
+  //  val backend = new SlickBackend(scala.slick.driver.H2Driver, AnnotationMapper)
 
   def receive: Receive = {
     case MovieDirectoryPing if !waitingForResponse =>
@@ -81,56 +76,26 @@ class MovieDirectoryActor(queryRef: ActorRef, movieDirectory: Ref[Map[String, Re
       totalPages = paged.totalPages
 
       // Update the directory
-      val releases = paged.releases
-      val directory = movieDirectory.single.transformAndGet(_ ++ (releases.map(_.id), releases).zipped)
-
-      // Remember which pages are fetched
-      receivedPages += ((yr, month, page))
-
-      log.info(
-        "Updated directory with {} entries from query {}, directory now contains {} entries.",
-        releases.size, q, directory.size
-      )
-    case sr: SnapshotRequest =>
-      sr.process(MovieDirectorySnapshot(
-        year = year,
-        month = month,
-        page = page,
-        totalPages = totalPages,
-        releases = new IterableBackedSeq(movieDirectory.single.get.values)
-      ))
-    case so: SnapshotOffer =>
-      so.snapshot.state match {
-        case MovieDirectorySnapshot(yr, mt, pg, tp, ms) =>
-          year = yr
-          month = mt
-          page = pg
-          totalPages = tp
+      readModel ! message.copy(event = StoreReleases(paged.releases))
+//    case sr: SnapshotRequest =>
+//      sr.process(MovieDirectorySnapshot(
+//        year = year,
+//        month = month,
+//        page = page,
+//        totalPages = totalPages
+//      ))
+//    case so: SnapshotOffer =>
+//      so.snapshot.state match {
+//        case MovieDirectorySnapshot(yr, mt, pg, tp) =>
+//          year = yr
+//          month = mt
+//          page = pg
+//          totalPages = tp
 //
-//          db.withSession { implicit session =>
-//            import scala.reflect.runtime.universe._
-//            val query = Queryable[Release]
-//            val q = backend.typetagToQuery(typeTag[Release])
-//            val sql = backend.driver.createInsertBuilder(q.node)
-//            backend.
-//
-//
-//            backend.result(query, session)
-//          }
-
-          val builder = Map.newBuilder[String, ReleaseLike]
-          builder.sizeHint(ms)
-
-          for (r <- ms) {
-            builder += ((r.id, r))
-          }
-
-          movieDirectory.single.set(builder.result())
-
-          log.info("Successfully recovered from {}", SnapshotOffer(so.snapshot.copy(state = "State removed for logging")))
-        case _ =>
-          log.error("Snapshot offer can not be processed: {}", SnapshotOffer(so.snapshot.copy(state = "State removed for logging")))
-      }
+//          log.info("Successfully recovered from {}", so)
+//        case _ =>
+//          log.error("Snapshot offer can not be processed: {}", so)
+//      }
     case any =>
       log.warning("Unmatched message {}", any)
   }

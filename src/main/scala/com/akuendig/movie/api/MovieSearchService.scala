@@ -19,7 +19,7 @@ class MovieSearchService(service: MovieDirectoryService)(implicit executionConte
         get {
           parameters('skip.as[Int] ? 0, 'take.as[Int] ? 10) {
             (skip, take) =>
-              complete(service.getMovies.values.drop(skip).take(take))
+              complete(service.getMovies(skip, take))
           }
         }
       }

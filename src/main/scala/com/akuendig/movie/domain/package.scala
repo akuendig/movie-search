@@ -2,6 +2,10 @@ package com.akuendig.movie
 
 import scala.language.postfixOps
 import scala.language.implicitConversions
+import reactivemongo.bson._
+import reactivemongo.bson.BSONDouble
+import reactivemongo.bson.BSONLong
+import reactivemongo.bson.BSONInteger
 
 
 package object domain {
@@ -22,4 +26,31 @@ package object domain {
 
   implicit def doubleToPrimitive(opt: Option[Double]): Option[java.lang.Double] =
     opt.map[java.lang.Double](i => i)
+
+  object Implicits {
+    implicit val intReadWriter = new BSONHandler[BSONInteger, java.lang.Integer] {
+      def write(t: Integer): BSONInteger = BSONInteger(t)
+
+      def read(bson: BSONInteger): Integer = bson.value
+    }
+
+    implicit val longReadWriter = new BSONHandler[BSONLong, java.lang.Long] {
+      def write(t: java.lang.Long): BSONLong = BSONLong(t)
+
+      def read(bson: BSONLong): java.lang.Long = bson.value
+    }
+
+    implicit val floatReadWriter = new BSONHandler[BSONDouble, java.lang.Float] {
+      def write(t: java.lang.Float): BSONDouble = BSONDouble(t.toDouble)
+
+      def read(bson: BSONDouble): java.lang.Float = bson.value.toFloat
+    }
+
+    implicit val sizeReadWriter = Macros.handler[Size]
+    implicit val groupReadWriter = Macros.handler[Group]
+    implicit val extInfoReadWriter = Macros.handler[ExtInfo]
+    implicit val categoryReadWriter = Macros.handler[Category]
+    implicit val releaseLikeReaderWriter = Macros.handler[Release]
+  }
+
 }
