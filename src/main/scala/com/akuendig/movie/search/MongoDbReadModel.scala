@@ -1,6 +1,6 @@
 package com.akuendig.movie.search
 
-import akka.actor.Actor
+import akka.actor.{ActorLogging, Actor}
 import com.akuendig.movie.domain._
 import com.akuendig.movie.core.MongoDbExtension
 import org.eligosource.eventsourced.core.Receiver
@@ -9,7 +9,6 @@ import reactivemongo.api.indexes.{Index, IndexType}
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.util.{Success, Failure}
-import spray.util.SprayActorLogging
 
 
 object MongoDbReadModel {
@@ -20,7 +19,7 @@ object MongoDbReadModel {
 
 }
 
-class MongoDbReadModel() extends Actor with SprayActorLogging {
+class MongoDbReadModel() extends Actor with ActorLogging {
   this: Receiver =>
 
   import MongoDbReadModel._

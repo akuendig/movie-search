@@ -1,9 +1,8 @@
 package com.akuendig.movie.search
 
-import akka.actor.{Actor, ActorRef}
+import akka.actor.{ActorLogging, Actor, ActorRef}
 import org.eligosource.eventsourced.core.{SnapshotOffer, SnapshotRequest, Eventsourced, Receiver}
 import spray.http.DateTime
-import spray.util.SprayActorLogging
 import com.akuendig.movie.domain.{QuerySceneReleasesResponse, QuerySceneReleases}
 
 
@@ -18,7 +17,7 @@ object MovieDirectoryActor {
 
 }
 
-class MovieDirectoryActor(queryRef: ActorRef, readModel: ActorRef) extends Actor with SprayActorLogging {
+class MovieDirectoryActor(queryRef: ActorRef, readModel: ActorRef) extends Actor with ActorLogging {
   this: Receiver with Eventsourced =>
 
   import MovieDirectoryActor._
@@ -77,25 +76,25 @@ class MovieDirectoryActor(queryRef: ActorRef, readModel: ActorRef) extends Actor
 
       // Update the directory
       readModel ! message.copy(event = StoreReleases(paged.releases))
-//    case sr: SnapshotRequest =>
-//      sr.process(MovieDirectorySnapshot(
-//        year = year,
-//        month = month,
-//        page = page,
-//        totalPages = totalPages
-//      ))
-//    case so: SnapshotOffer =>
-//      so.snapshot.state match {
-//        case MovieDirectorySnapshot(yr, mt, pg, tp) =>
-//          year = yr
-//          month = mt
-//          page = pg
-//          totalPages = tp
-//
-//          log.info("Successfully recovered from {}", so)
-//        case _ =>
-//          log.error("Snapshot offer can not be processed: {}", so)
-//      }
+    case sr: SnapshotRequest =>
+      sr.process(MovieDirectorySnapshot(
+        year = year,
+        month = month,
+        page = page,
+        totalPages = totalPages
+      ))
+    case so: SnapshotOffer =>
+      so.snapshot.state match {
+        case MovieDirectorySnapshot(yr, mt, pg, tp) =>
+          year = yr
+          month = mt
+          page = pg
+          totalPages = tp
+
+          log.info("Successfully recovered from {}", so)
+        case _ =>
+          log.error("Snapshot offer can not be processed: {}", so)
+      }
     case any =>
       log.warning("Unmatched message {}", any)
   }

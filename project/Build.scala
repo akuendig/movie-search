@@ -2,6 +2,7 @@ import sbt._
 import Keys._
 
 import spray.revolver.RevolverPlugin.Revolver
+import com.typesafe.sbt.SbtAtmos
 //import scalabuff.ScalaBuffPlugin._
 //import com.twitter.scrooge.ScroogeSBT
 
@@ -21,7 +22,13 @@ object BuildSettings {
 object RunSettings {
   val runSettings = Seq(
     javaOptions in run += "-Xmx4G",
-    javaOptions in Revolver.reStart ++= Seq("-Xmx4G", "-Dcom.sun.management.jmxremote", "-Dcom.sun.management.jmxremote.ssl=false", "-Dcom.sun.management.jmxremote.authenticate=false"),
+    javaOptions in Revolver.reStart ++= Seq(
+      "-Xmx4G",
+      "-server",
+      "-Dcom.sun.management.jmxremote.port=8086",
+      "-Dcom.sun.management.jmxremote.ssl=false",
+      "-Dcom.sun.management.jmxremote.authenticate=false"
+    ),
     Revolver.enableDebugging(suspend = false)
   )
 }
@@ -39,7 +46,7 @@ object Resolvers {
 }
 
 object Versions {
-  val sprayVersion = "1.2-20130801"
+  val sprayVersion = "1.2-20130822"
   val akkaVersion = "2.2.0"
 }
 
@@ -112,6 +119,6 @@ object MovieSearchBuild extends Build {
       libraryDependencies ++= Seq(sprayCan, sprayClient, sprayRouting),
       // test dependencies
       libraryDependencies ++= Seq(sprayTestKit, akkaTestKit, specs2, scalaTest, selenium)
-    )
-  )
+    ) ++ SbtAtmos.atmosSettings // atmos settings need to be after dependencies
+  ).configs(SbtAtmos.Atmos)
 }

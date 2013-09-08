@@ -21,7 +21,4 @@ trait ApiRoutes extends RouteConcatenation {
     new StaticResources().route
 
   val rootService = system.actorOf(Props(new RoutedHttpService(routes)))
-
 }
-
-
