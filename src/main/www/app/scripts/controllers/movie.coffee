@@ -2,11 +2,12 @@
 
 angular.module('ms.app')
   .controller 'MovieCtrl', ['$scope', 'Movie', ($scope, Movie) ->
-     Movie.query {}, (data) ->
-       $scope.movies = data.map (movie) ->
-        id: movie.id
-        dirName: movie.dirname
-        extId: movie.extInfo.id
-        title: movie.extInfo.title
+     result = Movie.query().then (data) -> _.map data, (movie) ->
+      id: movie.id
+      dirName: movie.dirname
+      extId: movie.extInfo.id
+      title: movie.extInfo.title
+
+     $scope.movies = result
 
   ]

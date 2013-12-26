@@ -5,12 +5,9 @@ angular.module('ms.services')
     # Service logic
     # ...
 
-    meaningOfLife = 42
-
     # Public API here
     {
       query: () ->
-        console.log('Query was called')
         Restangular.all('movies').getList({skip: 0, take: 20})
     }
   ]
