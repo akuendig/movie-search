@@ -11,33 +11,35 @@ import com.akuendig.movie.search.xrel._
 import com.akuendig.movie.http.SendReceive
 
 
+// Would be a nested class, put scala-pickling cannot handle it.
+private sealed class Response[T](val payload: T)
+
+
 abstract class XrelQueryServiceImpl(implicit val system: ActorSystem) extends XrelQueryService with SendReceive {
   val log = Logging(system, getClass)
 
-  import org.json4s._
-  import org.json4s.jackson.JsonMethods._
+  import scala.pickling.json._
 
-  private implicit val _fmts: Formats = DefaultFormats
   private implicit val _ec: ExecutionContext = system.dispatcher
 
   def uriFromAddressAndParams(address: String, params: Map[String, String]) =
     Uri(address).copy(query = Query(params)).render(new StringRendering).get
 
-  def fixFields(json: JValue): JValue =
-    json.transformField {
-      case ("link_href", x) => ("linkHref", x)
-      case ("audio_type", x) => ("audioType", x)
-      case ("video_type", x) => ("videoType", x)
-      case ("group_name", x) => ("groupName", x)
-      case ("ext_info", x) => ("extInfo", x)
-      case ("type", x) => ("tpe", x)
-      case ("total_count", x) => ("totalCount", x)
-      case ("current_page", x) => ("currentPage", x)
-      case ("per_page", x) => ("perPage", x)
-      case ("total_pages", x) => ("totalPages", x)
-      case ("tv_season", x) => ("tvSeason", x)
-      case ("tv_episode", x) => ("tvEpisode", x)
-    }
+  //  def fixFields(json: JValue): JValue =
+  //    json.transformField {
+  //      case ("link_href", x) => ("linkHref", x)
+  //      case ("audio_type", x) => ("audioType", x)
+  //      case ("video_type", x) => ("videoType", x)
+  //      case ("group_name", x) => ("groupName", x)
+  //      case ("ext_info", x) => ("extInfo", x)
+  //      case ("type", x) => ("tpe", x)
+  //      case ("total_count", x) => ("totalCount", x)
+  //      case ("current_page", x) => ("currentPage", x)
+  //      case ("per_page", x) => ("perPage", x)
+  //      case ("total_pages", x) => ("totalPages", x)
+  //      case ("tv_season", x) => ("tvSeason", x)
+  //      case ("tv_episode", x) => ("tvEpisode", x)
+  //    }
 
   def fetchSceneRelease(page: Int, year: Int, month: Int): Future[PagedSceneReleases] = {
     val address = "http://api.xrel.to/api/release/latest.json"
@@ -52,24 +54,10 @@ abstract class XrelQueryServiceImpl(implicit val system: ActorSystem) extends Xr
 
     response.map {
       data =>
-        val jsonData = fixFields(parse(data.entity.asString.lines.drop(1).next)) \ "payload"
-        val totalCount = (jsonData \ "totalCount").extract[Int]
-        val pagination = (jsonData \ "pagination").extract[Pagination]
-        val releasesJArray = (jsonData \ "list").asInstanceOf[JArray]
+        val jsonString = data.entity.asString.lines.drop(1).next()
+        val parsed = jsonString.unpickle[Response[PagedSceneReleases]]
 
-        val releases = releasesJArray.arr.foldLeft(Seq.newBuilder[SceneRelease]) {
-          (builder, rel) =>
-            try {
-              val release = rel.extract[SceneRelease]
-              builder += release
-            } catch {
-              case e: MappingException => log.error(e, s"Reading SceneRelease failed. ${compact(render(rel))}")
-            }
-
-            builder
-        }.result
-
-        PagedSceneReleases(totalCount, pagination, releases)
+        parsed.payload
     }
   }
 
@@ -107,10 +95,10 @@ abstract class XrelQueryServiceImpl(implicit val system: ActorSystem) extends Xr
 
     response.map {
       data =>
-        val jsonData = parse(data.entity.asString.lines.drop(1).next) \ "payload"
-        val releases = fixFields(jsonData).extract[PagedP2PReleases]
+        val jsonString = data.entity.asString.lines.drop(1).next()
+        val parsed = jsonString.unpickle[Response[PagedP2PReleases]]
 
-        releases
+        parsed.payload
     }
   }
 
