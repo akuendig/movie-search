@@ -1,7 +1,5 @@
 package com.akuendig.movie.domain
 
-import java.lang.{Integer => Int, Long, Float}
-
 
 trait ReleaseLike {
   def id: String

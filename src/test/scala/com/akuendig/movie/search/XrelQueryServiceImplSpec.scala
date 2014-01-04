@@ -15,6 +15,7 @@ import akka.util.Timeout
 import scala.concurrent.duration
 import scala.concurrent.duration.Duration
 import org.json4s.DefaultFormats
+import com.akuendig.movie.http.SendReceive
 
 class XrelQueryServiceImplSpec extends TestKit(ActorSystem()) with Specification with Core {
   sequential

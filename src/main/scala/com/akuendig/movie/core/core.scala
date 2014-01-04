@@ -9,6 +9,8 @@ import akka.contrib.throttle.Throttler._
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
 import akka.contrib.throttle.TimerBasedThrottler
+import com.akuendig.movie.http.SpraySendReceive
+import com.akuendig.movie.storage.{MovieDirectoryActor, MongoDbReadModel}
 
 /**
  * Core is type containing the ``system: ActorSystem`` member. This enables us to use it in our
@@ -62,7 +64,7 @@ trait CoreActors {
   readModelThrottler ! SetTarget(Some(readModelRef))
 
   // Create the actor responsible for updating the movie directory
-  val directoryRef: ActorRef = extension.processorOf(Props(new MovieDirectoryActor(queryRef, readModelChannel) with Receiver with Eventsourced {
+  val directoryRef: ActorRef = extension.processorOf(Props(new MovieDirectoryActor(queryRef, readModelRef) with Receiver with Eventsourced {
     val id = 1
   }))
 

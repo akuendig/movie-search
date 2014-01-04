@@ -1,8 +1,6 @@
 package com.akuendig.movie.search.xrel
 
 import com.akuendig.movie.domain
-import domain.intToPrimitive
-import domain.floatToPrimitive
 
 
 final case class ExtInfo(

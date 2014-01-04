@@ -1,7 +1,7 @@
 package com.akuendig.movie.search.xrel
 
 
-case class Pagination(
+final case class Pagination(
   currentPage: Int,
   perPage: Int,
   totalPages: Int

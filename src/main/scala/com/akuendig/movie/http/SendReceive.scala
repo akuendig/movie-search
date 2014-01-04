@@ -1,4 +1,4 @@
-package com.akuendig.movie.search
+package com.akuendig.movie.http
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}

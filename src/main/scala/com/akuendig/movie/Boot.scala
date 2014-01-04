@@ -2,7 +2,7 @@ package com.akuendig.movie
 
 
 import com.akuendig.movie.core.{MsgPackSerializer, CoreActors, BootedCore}
-import com.akuendig.movie.api.ApiRoutes
+import com.akuendig.movie.api.{Web, ApiRoutes}
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
 import akka.actor.ActorRef

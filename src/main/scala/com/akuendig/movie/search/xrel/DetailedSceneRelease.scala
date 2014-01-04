@@ -1,7 +1,5 @@
 package com.akuendig.movie.search.xrel
 
-import com.akuendig.movie.domain.intToPrimitive
-import com.akuendig.movie.domain.longToPrimitive
 import com.akuendig.movie.domain.Release
 
 

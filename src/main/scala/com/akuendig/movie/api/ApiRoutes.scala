@@ -3,7 +3,6 @@ package com.akuendig.movie.api
 import com.akuendig.movie.core.{CoreActors, Core}
 import akka.actor.Props
 import spray.routing.RouteConcatenation
-import com.akuendig.movie.{StaticResources, RoutedHttpService}
 
 /**
  * The REST API layer. It exposes the REST services, but does not provide any

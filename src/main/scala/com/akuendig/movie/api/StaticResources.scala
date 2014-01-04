@@ -1,4 +1,4 @@
-package com.akuendig.movie
+package com.akuendig.movie.api
 
 import spray.routing.Directives
 import org.json4s.DefaultJsonFormats

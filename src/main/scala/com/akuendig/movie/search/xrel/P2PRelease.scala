@@ -1,11 +1,9 @@
 package com.akuendig.movie.search.xrel
 
-import com.akuendig.movie.domain.intToPrimitive
-import com.akuendig.movie.domain.longToPrimitive
 import com.akuendig.movie.domain.Release
 
 
-case class P2PRelease(
+final case class P2PRelease(
   id: String,
   dirname: String,
   linkHref: String,

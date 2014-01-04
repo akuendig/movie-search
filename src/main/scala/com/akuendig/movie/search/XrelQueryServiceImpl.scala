@@ -8,6 +8,7 @@ import spray.http.{HttpResponse, StringRendering, Uri}
 import spray.http.Uri.Query
 import spray.httpx.RequestBuilding._
 import com.akuendig.movie.search.xrel._
+import com.akuendig.movie.http.SendReceive
 
 
 abstract class XrelQueryServiceImpl(implicit val system: ActorSystem) extends XrelQueryService with SendReceive {

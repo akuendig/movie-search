@@ -1,9 +1,8 @@
-package com.akuendig.movie
+package com.akuendig.movie.api
 
-import core.{CoreActors, Core}
 import akka.io.IO
 import spray.can.Http
-import com.akuendig.movie.api.ApiRoutes
+import com.akuendig.movie.core.{Core, CoreActors}
 
 /**
  * Provides the web server (spray-can) for the REST api in ``ApiRoutes``, using the actor system

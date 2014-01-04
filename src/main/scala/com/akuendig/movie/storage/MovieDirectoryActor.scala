@@ -1,4 +1,4 @@
-package com.akuendig.movie.search
+package com.akuendig.movie.storage
 
 import akka.actor.{ActorLogging, Actor, ActorRef}
 import org.eligosource.eventsourced.core.{SnapshotOffer, SnapshotRequest, Eventsourced, Receiver}
@@ -39,7 +39,7 @@ class MovieDirectoryActor(queryRef: ActorRef, readModel: ActorRef) extends Actor
   //  val db = JdbcBackend.Database.forURL("jdbc:h2:mem:test1", driver = "org.h2.Driver")
   //  val backend = new SlickBackend(scala.slick.driver.H2Driver, AnnotationMapper)
 
-  def receive: Receive = {
+  override def receive: Receive = {
     case MovieDirectoryPing if !waitingForResponse =>
       val query =
         if (totalPages >= 0 && page > totalPages) {

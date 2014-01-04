@@ -1,14 +1,14 @@
-package com.akuendig.movie.search
+package com.akuendig.movie.storage
 
 import akka.actor.{ActorLogging, Actor}
 import com.akuendig.movie.domain._
-import com.akuendig.movie.core.MongoDbExtension
 import org.eligosource.eventsourced.core.Receiver
-import play.api.libs.iteratee.Enumerator
-import reactivemongo.api.indexes.{Index, IndexType}
+import com.akuendig.movie.core.MongoDbExtension
+import reactivemongo.api.indexes.{IndexType, Index}
 import scala.concurrent.Await
+import play.api.libs.iteratee.Enumerator
+import scala.util.{Failure, Success}
 import scala.concurrent.duration._
-import scala.util.{Success, Failure}
 
 
 object MongoDbReadModel {
@@ -23,7 +23,6 @@ class MongoDbReadModel() extends Actor with ActorLogging {
   this: Receiver =>
 
   import MongoDbReadModel._
-  import com.akuendig.movie.domain.Implicits._
 
   private val mongoDb = MongoDbExtension(context.system)
 
@@ -42,7 +41,7 @@ class MongoDbReadModel() extends Actor with ActorLogging {
     Await.ready(setup, 5.seconds)
   }
 
-  def receive: Receive = {
+  override def receive: Receive = {
     case StoreReleases(releases) =>
       val msg = message
       val hash = releases.map(_.id.hashCode).sum

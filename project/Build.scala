@@ -8,8 +8,8 @@ import com.typesafe.sbt.SbtAtmos
 
 object BuildSettings {
   val buildOrganization = "com.akuendig"
-  val buildVersion = "0.1.0"
-  val buildScalaVersion = "2.10.2"
+  val buildVersion = "0.2.0"
+  val buildScalaVersion = "2.10.3"
 
   val buildSettings = Defaults.defaultSettings ++ Seq(
     organization := buildOrganization,
@@ -43,11 +43,14 @@ object Resolvers {
     "Eligosource Releases" at "http://repo.eligotech.com/nexus/content/repositories/eligosource-releases/"
   val eligosourceSnapshotsRepo =
     "Eligosource Snapshots" at "http://repo.eligotech.com/nexus/content/repositories/eligosource-snapshots/"
+
+  val sonatypeSnapshotsRepo =
+    "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
 }
 
 object Versions {
-  val sprayVersion = "1.2-20130822"
-  val akkaVersion = "2.2.0"
+  val sprayVersion = "1.2.0"
+  val akkaVersion = "2.2.3"
 }
 
 object Dependencies {
@@ -62,7 +65,6 @@ object Dependencies {
 
   lazy val akkaActor =   "com.typesafe.akka"  %% "akka-actor"   % akkaVersion % "compile"
   lazy val akkaContrib = "com.typesafe.akka"  %% "akka-contrib" % akkaVersion % "compile"
-//  lazy val akkaRemote =  "com.typesafe.akka"  %% "akka-remote"  % akkaVersion % "compile"
   lazy val akkaTestKit = "com.typesafe.akka"  %% "akka-testkit" % akkaVersion % "test"
 
   lazy val esCore =    "org.eligosource"  %% "eventsourced-core"            % "0.7-SNAPSHOT" % "compile"
@@ -71,12 +73,10 @@ object Dependencies {
   lazy val scalaStm = "org.scala-stm" %% "scala-stm" % "0.7" % "compile"
   lazy val scalaArm = "com.jsuereth"  %% "scala-arm" % "1.3" % "compile"
 
-//  lazy val thrift =        "org.apache.thrift"    % "libthrift"       % "0.9.0" % "compile"
-//  lazy val scrooge =       "com.twitter"          %% "scrooge-core"   % "3.5.0" % "compile"
-//  lazy val finagleThrift = "com.twitter"          %% "finagle-thrift" % "6.5.2" % "compile"
-
   lazy val msgpackJson = "com.googlecode.json-simple" % "json-simple" % "1.1.1" % "compile"
   lazy val msgpackJavassist = "org.javassist" % "javassist" % "3.16.1-GA" % "compile"
+
+  lazy val scalaPickling = "org.scala-lang" %% "scala-pickling" % "0.8.0-SNAPSHOT"
 
   lazy val h2 = "com.h2database" % "h2" % "1.3.173"
   lazy val slick = "com.typesafe.slick" %% "slick" % "2.0.0-M2"
@@ -85,12 +85,6 @@ object Dependencies {
     .exclude("ch.qos.logback", "logback-core")
     .exclude("ch.qos.logback", "logback-classic")
     .exclude("org.scala-stm", "scala-stm_2.10.0")
-
-  //  lazy val protoBuf =      "com.google.protobuf"  % "protobuf-java"   % "2.5.0" % "compile"
-  //  lazy val scalaBuff = "net.sandrogrzicic" %%  "scalabuff-compiler" % "1.1.1" % "compile"
-
-  lazy val json4sJackson = "org.json4s" %% "json4s-jackson" % "3.2.5" % "compile"
-//  lazy val json4sNative = "org.json4s" %% "json4s-native" % "3.2.5" % "compile"
 
   lazy val specs2 = "org.specs2" %% "specs2" % "1.13" % "test"
 
@@ -112,9 +106,9 @@ object MovieSearchBuild extends Build {
     "movie-search",
     file("."),
     settings = buildSettings ++ Revolver.settings ++ runSettings ++ Seq(
-      resolvers := Seq(springReleasesRepo, springNightlyRepo, typesafeRepo, eligosourceReleasesRepo, eligosourceSnapshotsRepo),
+      resolvers := Seq(springReleasesRepo, springNightlyRepo, typesafeRepo, eligosourceReleasesRepo, eligosourceSnapshotsRepo, sonatypeSnapshotsRepo),
       // compile dependencies (backend)
-      libraryDependencies ++= Seq(akkaActor, akkaContrib, scalaStm, scalaArm, msgpackJson, msgpackJavassist, esCore, esJournal, json4sJackson, h2, slick, reactiveMongo),
+      libraryDependencies ++= Seq(akkaActor, akkaContrib, scalaStm, scalaArm, scalaPickling, msgpackJson, msgpackJavassist, esCore, esJournal, h2, slick, reactiveMongo),
       // compile dependencies (frontend)
       libraryDependencies ++= Seq(sprayCan, sprayClient, sprayRouting),
       // test dependencies

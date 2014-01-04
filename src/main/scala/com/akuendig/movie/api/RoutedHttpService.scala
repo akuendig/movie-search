@@ -1,4 +1,4 @@
-package com.akuendig.movie
+package com.akuendig.movie.api
 
 import akka.actor.Actor
 import akka.event.Logging

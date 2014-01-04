@@ -32,7 +32,7 @@ object MongoDbExtension
   // so we return ourselves here, this allows us
   // to configure our extension to be loaded when
   // the ActorSystem starts up
-  override def lookup = MongoDbExtension
+  override def lookup() = MongoDbExtension
 
   //This method will be called by Akka
   // to instantiate our Extension
