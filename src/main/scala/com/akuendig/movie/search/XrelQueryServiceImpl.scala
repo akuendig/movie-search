@@ -57,7 +57,7 @@ abstract class XrelQueryServiceImpl(implicit val system: ActorSystem) extends Xr
     response.map {
       data =>
         val jsonString = data.entity.asString.lines.drop(1).next()
-        val json = parse(jsonString)
+        val json = fixFields(parse(jsonString))
 
         (json \ "payload").extract[PagedSceneReleases]
     }
@@ -98,7 +98,7 @@ abstract class XrelQueryServiceImpl(implicit val system: ActorSystem) extends Xr
     response.map {
       data =>
         val jsonString = data.entity.asString.lines.drop(1).next()
-        val json = parse(jsonString)
+        val json = fixFields(parse(jsonString))
 
         (json \ "payload").extract[PagedP2PReleases]
     }
