@@ -4,9 +4,8 @@ import akka.testkit.TestKit
 import org.specs2.mutable.Specification
 import scala.concurrent.{ExecutionContext, Await, Future}
 import spray.http._
-import org.json4s.JsonAST.JArray
 import java.io.{ByteArrayOutputStream, ObjectOutputStream}
-import com.akuendig.movie.search.xrel.{SceneRelease}
+import com.akuendig.movie.search.xrel.SceneRelease
 import com.akuendig.movie.domain.{Release, PagedReleases}
 import com.akuendig.movie.core.Core
 import akka.actor.ActorSystem
@@ -14,7 +13,6 @@ import spray.http.MediaTypes._
 import akka.util.Timeout
 import scala.concurrent.duration
 import scala.concurrent.duration.Duration
-import org.json4s.DefaultFormats
 import com.akuendig.movie.http.SendReceive
 
 class XrelQueryServiceImplSpec extends TestKit(ActorSystem()) with Specification with Core {
@@ -41,28 +39,24 @@ class XrelQueryServiceImplSpec extends TestKit(ActorSystem()) with Specification
       }
 
       service.fetchSceneRelease(1, 2013, 12)
-      request.uri.toString.mustEqual("http://api.xrel.to/api/release/latest.json?page=1&per_page=100&archive=2013-12").orThrow
+      request.uri.toString().mustEqual("http://api.xrel.to/api/release/latest.json?page=1&per_page=100&archive=2013-12").orThrow
 
       service.fetchSceneRelease(1, 203, 1)
-      request.uri.toString.mustEqual("http://api.xrel.to/api/release/latest.json?page=1&per_page=100&archive=0203-01").orThrow
+      request.uri.toString().mustEqual("http://api.xrel.to/api/release/latest.json?page=1&per_page=100&archive=0203-01").orThrow
     }
-
-    "parse a SceneRelease" in {
-      import org.json4s.jackson.JsonMethods._
-
-      val service = new XrelQueryServiceImpl() with SendReceive {
-        def sendReceive(req: HttpRequest)(implicit timeout: Timeout = _timeout) = {
-          Future(HttpResponse(status = StatusCodes.OK))
-        }
-      }
-
-      implicit val formats = DefaultFormats
-      val list = parse(jsonResultLatest.lines.drop(1).next) \ "payload" \ "list"
-
-      for (item <- list.asInstanceOf[JArray].arr) {
-        service.fixFields(item).extract[SceneRelease].mustNotEqual(null)
-      }
-    }
+//
+//    "parse a SceneRelease" in {
+//
+//      val service = new XrelQueryServiceImpl() with SendReceive {
+//        def sendReceive(req: HttpRequest)(implicit timeout: Timeout = _timeout) = {
+//          Future(HttpResponse(status = StatusCodes.OK, entity = HttpEntity(jsonResultLatest)))
+//        }
+//      }
+//
+//      val rel = service.fetchSceneRelease(1, 2013, 12)
+//
+//      Await.result(rel, _duration).list must haveSize(100)
+//    }
 
     "parse response correctly" in {
       val service = new XrelQueryServiceImpl() with SendReceive {

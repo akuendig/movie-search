@@ -5,17 +5,16 @@ import spray.http.HttpMethods._
 import akka.actor.ActorSystem
 import akka.event.Logging
 import com.akuendig.movie.storage.MovieStorage
-import com.akuendig.movie.domain.Release
-import com.akuendig.movie.domain.SerializationFormats
+import spray.httpx.Json4sJacksonSupport
+import org.json4s.DefaultFormats
 
 
 class MovieSearchService(implicit val system: ActorSystem)
-  extends Directives with CORSDirectives with SerializationFormats.JsonFormats {
+  extends Directives with CORSDirectives with Json4sJacksonSupport {
 
   self: MovieStorage =>
 
-  import scala.pickling._
-  import scala.pickling.json._
+  val json4sJacksonFormats = DefaultFormats
 
   private val log = Logging(system, getClass)
   private val origin = "http://localhost:9001"
@@ -29,11 +28,7 @@ class MovieSearchService(implicit val system: ActorSystem)
           (skip, take) =>
             val result = getMovies(skip, take)
 
-            complete(result.map {
-              releases: Seq[Release] =>
-                val pickled = releases.pickle
-                pickled.value
-            })
+            complete(result)
         }
       }
     }

@@ -3,8 +3,6 @@ import Keys._
 
 import spray.revolver.RevolverPlugin.Revolver
 import com.typesafe.sbt.SbtAtmos
-//import scalabuff.ScalaBuffPlugin._
-//import com.twitter.scrooge.ScroogeSBT
 
 object BuildSettings {
   val buildOrganization = "com.akuendig"
@@ -58,30 +56,30 @@ object Dependencies {
   import Versions._
 
   // compile dependencies
-  lazy val sprayCan =     "io.spray" % "spray-can"      % sprayVersion % "compile"
-  lazy val sprayClient =  "io.spray" % "spray-client"   % sprayVersion % "compile"
-  lazy val sprayRouting = "io.spray" % "spray-routing"  % sprayVersion % "compile"
-  lazy val sprayTestKit = "io.spray" % "spray-testkit"  % sprayVersion % "test"
+  val sprayCan =     "io.spray" % "spray-can"      % sprayVersion % "compile"
+  val sprayClient =  "io.spray" % "spray-client"   % sprayVersion % "compile"
+  val sprayRouting = "io.spray" % "spray-routing"  % sprayVersion % "compile"
+  val sprayTestKit = "io.spray" % "spray-testkit"  % sprayVersion % "test"
 
-  lazy val akkaActor =   "com.typesafe.akka"  %% "akka-actor"   % akkaVersion % "compile"
-  lazy val akkaContrib = "com.typesafe.akka"  %% "akka-contrib" % akkaVersion % "compile"
-  lazy val akkaTestKit = "com.typesafe.akka"  %% "akka-testkit" % akkaVersion % "test"
+  val akkaActor =   "com.typesafe.akka"  %% "akka-actor"   % akkaVersion % "compile"
+  val akkaContrib = "com.typesafe.akka"  %% "akka-contrib" % akkaVersion % "compile"
+  val akkaTestKit = "com.typesafe.akka"  %% "akka-testkit" % akkaVersion % "test"
 
-  lazy val scalaStm = "org.scala-stm" %% "scala-stm" % "0.7" % "compile"
-  lazy val scalaArm = "com.jsuereth"  %% "scala-arm" % "1.3" % "compile"
+  val scalaStm = "org.scala-stm" %% "scala-stm" % "0.7" % "compile"
+  val scalaArm = "com.jsuereth"  %% "scala-arm" % "1.3" % "compile"
 
-  lazy val scalaPickling = "org.scala-lang" %% "scala-pickling" % "0.8.0-SNAPSHOT"
+  val json4sJackson = "org.json4s" %% "json4s-jackson" % "3.2.6"
 
-  lazy val reactiveMongo = ("org.reactivemongo" %% "reactivemongo" % "0.9-AKKA-2.2.0"  % "compile")
+  val reactiveMongo = ("org.reactivemongo" %% "reactivemongo" % "0.10.0"  % "compile")
     .exclude("ch.qos.logback", "logback-core")
     .exclude("ch.qos.logback", "logback-classic")
     .exclude("org.scala-stm", "scala-stm_2.10.0")
 
-  lazy val specs2 = "org.specs2" %% "specs2" % "1.13" % "test"
+  val specs2 = "org.specs2" %% "specs2" % "1.13" % "test"
 
-  lazy val scalaTest = "org.scalatest" %% "scalatest" % "2.0.M5b" % "test"
+  val scalaTest = "org.scalatest" %% "scalatest" % "2.0.M5b" % "test"
 
-  lazy val selenium = "org.seleniumhq.selenium" % "selenium-java" % "2.28.0" % "test"
+  val selenium = "org.seleniumhq.selenium" % "selenium-java" % "2.28.0" % "test"
 }
 
 object MovieSearchBuild extends Build {
@@ -99,7 +97,7 @@ object MovieSearchBuild extends Build {
     settings = buildSettings ++ Revolver.settings ++ runSettings ++ Seq(
       resolvers := Seq(springReleasesRepo, springNightlyRepo, typesafeRepo, eligosourceReleasesRepo, eligosourceSnapshotsRepo, sonatypeSnapshotsRepo),
       // compile dependencies (backend)
-      libraryDependencies ++= Seq(akkaActor, akkaContrib, scalaStm, scalaArm, scalaPickling, reactiveMongo),
+      libraryDependencies ++= Seq(akkaActor, akkaContrib, scalaStm, scalaArm, json4sJackson, reactiveMongo),
       // compile dependencies (frontend)
       libraryDependencies ++= Seq(sprayCan, sprayClient, sprayRouting),
       // test dependencies
