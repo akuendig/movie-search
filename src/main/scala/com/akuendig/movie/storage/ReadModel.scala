@@ -1,6 +1,7 @@
 package com.akuendig.movie.storage
 
-import com.akuendig.movie.domain.Release
+import akka.actor.{ActorLogging, Actor}
+import com.akuendig.movie.domain._
 
 
 object ReadModel {
@@ -9,4 +10,13 @@ object ReadModel {
 
   final case class StoreReleases(release: Traversable[Release]) extends ReadModelMessage
 
+}
+
+class ReadModel(storage: MovieStorage) extends Actor with ActorLogging {
+
+  import ReadModel._
+
+  override def receive: Receive = {
+    case StoreReleases(releases) => storage.put(releases)
+  }
 }

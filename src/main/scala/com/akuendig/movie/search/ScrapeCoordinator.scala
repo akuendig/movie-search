@@ -1,8 +1,6 @@
 package com.akuendig.movie.search
 
 import akka.actor.{ActorLogging, Actor, ActorRef}
-import spray.http.DateTime
-import com.akuendig.movie.domain.{QuerySceneReleasesResponse, QuerySceneReleases}
 import com.akuendig.movie.core.StorageConfigExtension
 import com.akuendig.movie.storage.ReadModel
 
@@ -23,17 +21,15 @@ class ScrapeCoordinator(queryRef: ActorRef, readModel: ActorRef) extends Actor w
 
   import ScrapeCoordinator._
   import ReadModel._
+  import MovieQueryActor._
 
-  private val startedAt = DateTime.now
-  private val now = DateTime.now
-
-  private var year = now.year
-  private var month = now.month
-  private var page = 0
+  private var year       = 0
+  private var month      = 0
+  private var page       = 0
   private var totalPages = -1
 
   private var waitingForResponse = false
-  private val storageConfig = StorageConfigExtension(context.system)
+  private val storageConfig      = StorageConfigExtension(context.system)
 
   override def preStart() {
     val state = storageConfig.scene
@@ -43,9 +39,6 @@ class ScrapeCoordinator(queryRef: ActorRef, readModel: ActorRef) extends Actor w
     page = state.page
     totalPages = state.totalPages
   }
-
-  //  val db = JdbcBackend.Database.forURL("jdbc:h2:mem:test1", driver = "org.h2.Driver")
-  //  val backend = new SlickBackend(scala.slick.driver.H2Driver, AnnotationMapper)
 
   override def receive: Receive = {
     case MovieDirectoryPing if !waitingForResponse =>

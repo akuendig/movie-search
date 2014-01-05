@@ -70,6 +70,8 @@ object Dependencies {
 
   val slf4jApi = "org.slf4j" % "slf4j-api" % "1.7.5"
 
+  val trueZip = "de.schlichtherle.truezip" %% "truezip" % "7.7.5"
+
   val json4sJackson = "org.json4s" %% "json4s-jackson" % "3.2.6"
 
   val reactiveMongo = ("org.reactivemongo" %% "reactivemongo" % "0.10.0" % "compile")

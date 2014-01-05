@@ -9,10 +9,8 @@ import spray.httpx.Json4sJacksonSupport
 import org.json4s.DefaultFormats
 
 
-class MovieSearchService(implicit val system: ActorSystem)
+class MovieSearchService(storage: MovieStorage)(implicit val system: ActorSystem)
   extends Directives with CORSDirectives with Json4sJacksonSupport {
-
-  self: MovieStorage =>
 
   val json4sJacksonFormats = DefaultFormats
 
@@ -26,7 +24,7 @@ class MovieSearchService(implicit val system: ActorSystem)
       get {
         parameters('skip.as[Int] ? 0, 'take.as[Int] ? 10) {
           (skip, take) =>
-            val result = getMovies(skip, take)
+            val result = storage.get(skip, take)
 
             complete(result)
         }

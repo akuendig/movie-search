@@ -8,5 +8,5 @@ final case class ExtInfo(
   var linkHref: Option[String] = None,
   var uris: Set[String] = Set.empty,
   var numRatings: Option[Int] = None,
-  var rating: Option[Float] = None
+  var rating: Option[Double] = None
 )

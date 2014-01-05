@@ -2,15 +2,19 @@ package com.akuendig.movie.search
 
 import akka.actor.{ActorLogging, Actor}
 import scala.util.{Failure, Success}
-import com.akuendig.movie.domain
 import com.akuendig.movie.domain.PagedReleases
 
 
 object MovieQueryActor {
-  type QuerySceneReleases = domain.QuerySceneReleases
-  val QuerySceneReleases = domain.QuerySceneReleases
-  type QuerySceneReleasesResponse = domain.QuerySceneReleasesResponse
-  val QuerySceneReleasesResponse = domain.QuerySceneReleasesResponse
+
+  sealed trait MovieQueryMessages
+
+  final case class QuerySceneReleases(var year: Int = 0, var month: Int = 0,
+                                      var page: Int = 0) extends MovieQueryMessages
+
+  final case class QuerySceneReleasesResponse(var query: QuerySceneReleases = QuerySceneReleases(),
+                                              var result: Option[PagedReleases] = None) extends MovieQueryMessages
+
 }
 
 

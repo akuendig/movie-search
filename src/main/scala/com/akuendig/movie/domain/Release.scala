@@ -23,6 +23,6 @@ final case class Release(
   var tvEpisode: Option[Int] = None,
 
   var numRatings: Option[Int] = None,
-  var audioRating: Option[Float] = None,
-  var videoRating: Option[Float] = None
+  var audioRating: Option[Double] = None,
+  var videoRating: Option[Double] = None
 )

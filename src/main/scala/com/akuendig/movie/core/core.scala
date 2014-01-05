@@ -4,10 +4,11 @@ import akka.actor.{ActorRef, Props, ActorSystem}
 import com.akuendig.movie.search._
 import akka.contrib.throttle.Throttler._
 import scala.concurrent.duration._
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Future, ExecutionContext}
 import akka.contrib.throttle.TimerBasedThrottler
 import com.akuendig.movie.http.SpraySendReceive
-import com.akuendig.movie.storage.{MongoDbReadModel}
+import com.akuendig.movie.storage.{MovieStorage, NopMovieStorage, ReadModel}
+import com.akuendig.movie.domain.Release
 
 /**
  * Core is type containing the ``system: ActorSystem`` member. This enables us to use it in our
@@ -17,6 +18,7 @@ trait Core {
 
   implicit def system: ActorSystem
 
+  def storage: MovieStorage
 }
 
 /**
@@ -29,6 +31,8 @@ trait BootedCore extends Core {
    * Construct the ActorSystem we will use in our application
    */
   implicit lazy val system = ActorSystem("movies")
+
+  val storage = new NopMovieStorage()
 
   /**
    * Ensure that the constructed ActorSystem is shut down when the JVM shuts down
@@ -49,13 +53,11 @@ trait CoreActors {
   // Create the querying actor communicating with the different external services
   val queryRef: ActorRef = system.actorOf(Props(new MovieQueryActor(new XrelQueryServiceImpl with SpraySendReceive)))
 
-  val readModelRef: ActorRef = system.actorOf(Props(new MongoDbReadModel()))
+  val readModelRef: ActorRef = system.actorOf(Props(new ReadModel(storage)))
   val readModelThrottler = system.actorOf(Props(classOf[TimerBasedThrottler], 10.msgsPerSecond))
   // Set the target
   readModelThrottler ! SetTarget(Some(readModelRef))
 
   // Create the actor responsible for updating the movie directory
-  val directoryRef: ActorRef = system.actorOf(Props(new ScrapeCoordinator(queryRef, readModelThrottler) {
-    val id = 1
-  }))
+  val directoryRef: ActorRef = system.actorOf(Props(new ScrapeCoordinator(queryRef, readModelThrottler)))
 }

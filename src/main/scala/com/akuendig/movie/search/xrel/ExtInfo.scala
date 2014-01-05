@@ -10,7 +10,7 @@ final case class ExtInfo(
   linkHref: Option[String] = None,
   uris: Set[String] = Set.empty,
   numRatings: Option[Int] = None,
-  rating: Option[Float] = None
+  rating: Option[Double] = None
 ) {
   def toDomain: domain.ExtInfo = domain.ExtInfo(id, tpe, title, linkHref, uris, numRatings, rating)
 }

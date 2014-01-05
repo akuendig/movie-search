@@ -5,5 +5,6 @@ import com.akuendig.movie.domain.Release
 
 
 trait MovieStorage {
-  def getMovies(skip: Int, take: Int): Future[List[Release]]
+  def get(skip: Int, take: Int): Future[Traversable[Release]]
+  def put(movies: Traversable[Release]): Future[Int]
 }

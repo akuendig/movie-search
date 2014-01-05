@@ -14,10 +14,10 @@ import com.akuendig.movie.storage.NopMovieStorage
 trait ApiRoutes extends RouteConcatenation {
   this: CoreActors with Core =>
 
-  private implicit val _ = system.dispatcher
+  private implicit val _ec = system.dispatcher
 
   val routes =
-    (new MovieSearchService with NopMovieStorage).route ~
+    new MovieSearchService(storage).route ~
     new StaticResources().route
 
   val rootService = system.actorOf(Props(new RoutedHttpService(routes)))
