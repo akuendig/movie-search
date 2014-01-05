@@ -8,17 +8,9 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 
-object MongoDbReadModel {
-
-  sealed trait MongoDbReadModelMessage
-
-  case class StoreReleases(release: Traversable[Release]) extends MongoDbReadModelMessage
-
-}
-
 class MongoDbReadModel() extends Actor with ActorLogging {
 
-  import MongoDbReadModel._
+  import ReadModel._
 
   private val mongoDb = MongoDbExtension(context.system)
 
@@ -39,16 +31,16 @@ class MongoDbReadModel() extends Actor with ActorLogging {
 
   override def receive: Receive = {
     case StoreReleases(releases) =>
-//      val msg = message
-//      val hash = releases.map(_.id.hashCode).sum
-//
-//      mongoDb.releasesCollection.bulkInsert(Enumerator.enumerate(releases)).onComplete {
-//        case Success(count) =>
-//          log.info("successfully inserted {}, count: {}", hash, count)
-//          msg.confirm(pos = true)
-//        case Failure(t) =>
-//          log.error(t, "failure inserting {}", hash)
-//          msg.confirm(pos = false)
-//      }
+    //      val msg = message
+    //      val hash = releases.map(_.id.hashCode).sum
+    //
+    //      mongoDb.releasesCollection.bulkInsert(Enumerator.enumerate(releases)).onComplete {
+    //        case Success(count) =>
+    //          log.info("successfully inserted {}, count: {}", hash, count)
+    //          msg.confirm(pos = true)
+    //        case Failure(t) =>
+    //          log.error(t, "failure inserting {}", hash)
+    //          msg.confirm(pos = false)
+    //      }
   }
 }

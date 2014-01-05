@@ -56,23 +56,23 @@ object Dependencies {
   import Versions._
 
   // compile dependencies
-  val sprayCan =     "io.spray" % "spray-can"      % sprayVersion % "compile"
-  val sprayClient =  "io.spray" % "spray-client"   % sprayVersion % "compile"
-  val sprayRouting = "io.spray" % "spray-routing"  % sprayVersion % "compile"
-  val sprayTestKit = "io.spray" % "spray-testkit"  % sprayVersion % "test"
+  val sprayCan = "io.spray" % "spray-can" % sprayVersion % "compile"
+  val sprayClient = "io.spray" % "spray-client" % sprayVersion % "compile"
+  val sprayRouting = "io.spray" % "spray-routing" % sprayVersion % "compile"
+  val sprayTestKit = "io.spray" % "spray-testkit" % sprayVersion % "test"
 
-  val akkaActor =   "com.typesafe.akka"  %% "akka-actor"   % akkaVersion % "compile"
-  val akkaContrib = "com.typesafe.akka"  %% "akka-contrib" % akkaVersion % "compile"
-  val akkaTestKit = "com.typesafe.akka"  %% "akka-testkit" % akkaVersion % "test"
+  val akkaActor = "com.typesafe.akka" %% "akka-actor" % akkaVersion % "compile"
+  val akkaContrib = "com.typesafe.akka" %% "akka-contrib" % akkaVersion % "compile"
+  val akkaTestKit = "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test"
 
   val scalaStm = "org.scala-stm" %% "scala-stm" % "0.7" % "compile"
-  val scalaArm = "com.jsuereth"  %% "scala-arm" % "1.3" % "compile"
+  val scalaArm = "com.jsuereth" %% "scala-arm" % "1.3" % "compile"
+
+  val slf4jApi = "org.slf4j" % "slf4j-api" % "1.7.5"
 
   val json4sJackson = "org.json4s" %% "json4s-jackson" % "3.2.6"
 
-  val reactiveMongo = ("org.reactivemongo" %% "reactivemongo" % "0.10.0"  % "compile")
-    .exclude("ch.qos.logback", "logback-core")
-    .exclude("ch.qos.logback", "logback-classic")
+  val reactiveMongo = ("org.reactivemongo" %% "reactivemongo" % "0.10.0" % "compile")
     .exclude("org.scala-stm", "scala-stm_2.10.0")
 
   val specs2 = "org.specs2" %% "specs2" % "1.13" % "test"
@@ -88,6 +88,7 @@ object MovieSearchBuild extends Build {
   import RunSettings._
   import Resolvers._
   import Dependencies._
+
   lazy val versionReport = TaskKey[String]("version-report")
 
   // Add this setting to your project.
@@ -95,9 +96,17 @@ object MovieSearchBuild extends Build {
     "movie-search",
     file("."),
     settings = buildSettings ++ Revolver.settings ++ runSettings ++ Seq(
-      resolvers := Seq(springReleasesRepo, springNightlyRepo, typesafeRepo, eligosourceReleasesRepo, eligosourceSnapshotsRepo, sonatypeSnapshotsRepo),
+      resolvers := Seq(
+        springReleasesRepo, springNightlyRepo,
+        typesafeRepo,
+        eligosourceReleasesRepo, eligosourceSnapshotsRepo,
+        sonatypeSnapshotsRepo
+      ),
       // compile dependencies (backend)
-      libraryDependencies ++= Seq(akkaActor, akkaContrib, scalaStm, scalaArm, json4sJackson, reactiveMongo),
+      libraryDependencies ++= Seq(
+        akkaActor, akkaContrib,
+        scalaStm, scalaArm,
+        slf4jApi, json4sJackson, reactiveMongo),
       // compile dependencies (frontend)
       libraryDependencies ++= Seq(sprayCan, sprayClient, sprayRouting),
       // test dependencies

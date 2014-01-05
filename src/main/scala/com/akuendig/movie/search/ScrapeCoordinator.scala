@@ -1,33 +1,48 @@
-package com.akuendig.movie.storage
+package com.akuendig.movie.search
 
 import akka.actor.{ActorLogging, Actor, ActorRef}
 import spray.http.DateTime
 import com.akuendig.movie.domain.{QuerySceneReleasesResponse, QuerySceneReleases}
+import com.akuendig.movie.core.StorageConfigExtension
+import com.akuendig.movie.storage.ReadModel
 
 
-object MovieDirectoryActor {
+case class ScrapingState(year: Int, month: Int, page: Int, totalPages: Int)
+
+object ScrapeCoordinator {
 
   sealed trait MovieDirectoryMessage
-  case object MovieDirectoryPing
+
+  case object MovieDirectoryPing extends MovieDirectoryMessage
+
+  case object MovieDirectorySnapshot extends MovieDirectoryMessage
+
 }
 
-class MovieDirectoryActor(queryRef: ActorRef, readModel: ActorRef) extends Actor with ActorLogging {
+class ScrapeCoordinator(queryRef: ActorRef, readModel: ActorRef) extends Actor with ActorLogging {
 
-  import MovieDirectoryActor._
-  import MongoDbReadModel._
+  import ScrapeCoordinator._
+  import ReadModel._
 
-  val startedAt = DateTime.now
+  private val startedAt = DateTime.now
+  private val now = DateTime.now
 
-  var receivedPages = Set.empty[(Int, Int, Int)]
+  private var year = now.year
+  private var month = now.month
+  private var page = 0
+  private var totalPages = -1
 
-  val now = DateTime.now
+  private var waitingForResponse = false
+  private val storageConfig = StorageConfigExtension(context.system)
 
-  var year = now.year
-  var month = now.month
-  var page = 0
-  var totalPages = -1
+  override def preStart() {
+    val state = storageConfig.scene
 
-  var waitingForResponse = false
+    year = state.year
+    month = state.month
+    page = state.page
+    totalPages = state.totalPages
+  }
 
   //  val db = JdbcBackend.Database.forURL("jdbc:h2:mem:test1", driver = "org.h2.Driver")
   //  val backend = new SlickBackend(scala.slick.driver.H2Driver, AnnotationMapper)
@@ -36,10 +51,10 @@ class MovieDirectoryActor(queryRef: ActorRef, readModel: ActorRef) extends Actor
     case MovieDirectoryPing if !waitingForResponse =>
       val query =
         if (totalPages >= 0 && page > totalPages) {
-          if (month == 1) {
-            QuerySceneReleases(year = year - 1, month = 12, page = 1)
+          if (month == 11) {
+            QuerySceneReleases(year = year + 1, month = 1, page = 1)
           } else {
-            QuerySceneReleases(year = year, month = month - 1, page = 1)
+            QuerySceneReleases(year = year, month = month + 1, page = 1)
           }
         } else {
           QuerySceneReleases(year = year, month = month, page = page + 1)
@@ -56,8 +71,8 @@ class MovieDirectoryActor(queryRef: ActorRef, readModel: ActorRef) extends Actor
       // When events are replayed then adjust the current year, month and page counters
       val correct =
         (pg == page + 1) ||
-          (pg == 1 && mt == month - 1) ||
-          (pg == 1 && mt == 12 && yr == year - 1)
+          (pg == 1 && mt == month + 1) ||
+          (pg == 1 && mt == 1 && yr == year + 1)
 
       if (!correct) log.warning("Page not processed in sequence {}", q)
 
@@ -69,6 +84,8 @@ class MovieDirectoryActor(queryRef: ActorRef, readModel: ActorRef) extends Actor
 
       // Update the directory
       readModel ! StoreReleases(paged.releases)
+    case MovieDirectorySnapshot =>
+      storageConfig.snapshotScene(ScrapingState(year, month, page, totalPages))
     case any =>
       log.warning("Unmatched message {}", any)
   }

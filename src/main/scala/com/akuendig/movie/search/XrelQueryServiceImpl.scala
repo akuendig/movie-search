@@ -11,10 +11,6 @@ import com.akuendig.movie.search.xrel._
 import com.akuendig.movie.http.SendReceive
 
 
-// Would be a nested class, put scala-pickling cannot handle it.
-private sealed class Response[T](val payload: T)
-
-
 abstract class XrelQueryServiceImpl(implicit val system: ActorSystem) extends XrelQueryService with SendReceive {
   val log = Logging(system, getClass)
 

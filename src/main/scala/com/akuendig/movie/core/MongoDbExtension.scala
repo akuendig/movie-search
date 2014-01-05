@@ -1,7 +1,5 @@
 package com.akuendig.movie.core
 
-;
-
 import akka.actor._
 import scala.collection.JavaConversions._
 import com.typesafe.config.Config
