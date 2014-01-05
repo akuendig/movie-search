@@ -2,12 +2,9 @@ package com.akuendig.movie.storage
 
 import akka.actor.{ActorLogging, Actor}
 import com.akuendig.movie.domain._
-import org.eligosource.eventsourced.core.Receiver
 import com.akuendig.movie.core.MongoDbExtension
 import reactivemongo.api.indexes.{IndexType, Index}
 import scala.concurrent.Await
-import play.api.libs.iteratee.Enumerator
-import scala.util.{Failure, Success}
 import scala.concurrent.duration._
 
 
@@ -20,7 +17,6 @@ object MongoDbReadModel {
 }
 
 class MongoDbReadModel() extends Actor with ActorLogging {
-  this: Receiver =>
 
   import MongoDbReadModel._
 

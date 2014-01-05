@@ -6,10 +6,11 @@ import akka.actor.ActorSystem
 import akka.event.Logging
 import com.akuendig.movie.storage.MovieStorage
 import com.akuendig.movie.domain.Release
+import com.akuendig.movie.domain.SerializationFormats
 
 
 class MovieSearchService(implicit val system: ActorSystem)
-  extends Directives with CORSDirectives {
+  extends Directives with CORSDirectives with SerializationFormats.JsonFormats {
 
   self: MovieStorage =>
 

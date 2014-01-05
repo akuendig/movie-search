@@ -1,7 +1,6 @@
 package com.akuendig.movie.core
 
 import akka.actor.{ActorRef, Props, ActorSystem}
-import org.eligosource.eventsourced.core._
 import com.akuendig.movie.search._
 import akka.contrib.throttle.Throttler._
 import scala.concurrent.duration._
@@ -50,7 +49,7 @@ trait CoreActors {
   // Create the querying actor communicating with the different external services
   val queryRef: ActorRef = system.actorOf(Props(new MovieQueryActor(new XrelQueryServiceImpl with SpraySendReceive)))
 
-  val readModelRef: ActorRef = system.actorOf(Props(new MongoDbReadModel() with Receiver))
+  val readModelRef: ActorRef = system.actorOf(Props(new MongoDbReadModel()))
   val readModelThrottler = system.actorOf(Props(classOf[TimerBasedThrottler], 10.msgsPerSecond))
   // Set the target
   readModelThrottler ! SetTarget(Some(readModelRef))

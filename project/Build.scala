@@ -67,19 +67,10 @@ object Dependencies {
   lazy val akkaContrib = "com.typesafe.akka"  %% "akka-contrib" % akkaVersion % "compile"
   lazy val akkaTestKit = "com.typesafe.akka"  %% "akka-testkit" % akkaVersion % "test"
 
-  lazy val esCore =    "org.eligosource"  %% "eventsourced-core"            % "0.7-SNAPSHOT" % "compile"
-  lazy val esJournal = "org.eligosource"  %% "eventsourced-journal-leveldb" % "0.7-SNAPSHOT" % "compile"
-
   lazy val scalaStm = "org.scala-stm" %% "scala-stm" % "0.7" % "compile"
   lazy val scalaArm = "com.jsuereth"  %% "scala-arm" % "1.3" % "compile"
 
-  lazy val msgpackJson = "com.googlecode.json-simple" % "json-simple" % "1.1.1" % "compile"
-  lazy val msgpackJavassist = "org.javassist" % "javassist" % "3.16.1-GA" % "compile"
-
   lazy val scalaPickling = "org.scala-lang" %% "scala-pickling" % "0.8.0-SNAPSHOT"
-
-  lazy val h2 = "com.h2database" % "h2" % "1.3.173"
-  lazy val slick = "com.typesafe.slick" %% "slick" % "2.0.0-M2"
 
   lazy val reactiveMongo = ("org.reactivemongo" %% "reactivemongo" % "0.9-AKKA-2.2.0"  % "compile")
     .exclude("ch.qos.logback", "logback-core")
@@ -108,7 +99,7 @@ object MovieSearchBuild extends Build {
     settings = buildSettings ++ Revolver.settings ++ runSettings ++ Seq(
       resolvers := Seq(springReleasesRepo, springNightlyRepo, typesafeRepo, eligosourceReleasesRepo, eligosourceSnapshotsRepo, sonatypeSnapshotsRepo),
       // compile dependencies (backend)
-      libraryDependencies ++= Seq(akkaActor, akkaContrib, scalaStm, scalaArm, scalaPickling, msgpackJson, msgpackJavassist, esCore, esJournal, h2, slick, reactiveMongo),
+      libraryDependencies ++= Seq(akkaActor, akkaContrib, scalaStm, scalaArm, scalaPickling, reactiveMongo),
       // compile dependencies (frontend)
       libraryDependencies ++= Seq(sprayCan, sprayClient, sprayRouting),
       // test dependencies
