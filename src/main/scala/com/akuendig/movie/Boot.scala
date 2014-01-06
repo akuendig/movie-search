@@ -8,7 +8,7 @@ import com.akuendig.movie.api.{Web, ApiRoutes}
 import com.akuendig.movie.domain.Release
 import com.akuendig.movie.storage.ReadModel.{StoreReleasesComplete, StoreReleases}
 import java.io.File
-import scala.concurrent.{Await, Future, ExecutionContext}
+import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
 
 object Boot extends App with BootedCore with CoreActors with ApiRoutes with Web {
@@ -40,7 +40,7 @@ object Boot extends App with BootedCore with CoreActors with ApiRoutes with Web 
     }
   }
 
-  readOldData()
+  //  readOldData()
 
   //  system.scheduler.schedule(1.second, 15.seconds, directoryRef, MovieDirectoryActor.MovieDirectoryPing)
 }

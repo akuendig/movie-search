@@ -13,12 +13,12 @@ import akka.util.Timeout
 import scala.concurrent.duration
 import scala.concurrent.duration.Duration
 import com.akuendig.movie.http.SendReceive
-import com.akuendig.movie.storage.NopMovieStorage
+import com.akuendig.movie.storage.NopReadModel
 
 class XrelQueryServiceImplSpec extends TestKit(ActorSystem()) with Specification with Core {
   sequential
 
-  val storage = new NopMovieStorage()
+  val storage = new NopReadModel()
 
   implicit val _duration: Duration         = duration.DurationInt(5).seconds
   implicit val _timeout : Timeout          = duration.DurationInt(5).seconds

@@ -2,11 +2,9 @@ package com.akuendig.movie.core
 
 import akka.actor.{ActorRef, Props, ActorSystem}
 import com.akuendig.movie.search._
-import akka.contrib.throttle.Throttler._
 import scala.concurrent.ExecutionContext
-import akka.contrib.throttle.TimerBasedThrottler
 import com.akuendig.movie.http.SpraySendReceive
-import com.akuendig.movie.storage.{ArchiveMovieStorage, MovieStorage, ReadModel}
+import com.akuendig.movie.storage.ArchiveReadModel
 
 /**
  * Core is type containing the ``system: ActorSystem`` member. This enables us to use it in our
@@ -15,8 +13,6 @@ import com.akuendig.movie.storage.{ArchiveMovieStorage, MovieStorage, ReadModel}
 trait Core {
 
   implicit def system: ActorSystem
-
-  def storage: MovieStorage
 }
 
 /**
@@ -30,7 +26,7 @@ trait BootedCore extends Core {
    */
   implicit lazy val system = ActorSystem("movies")
 
-  val storage = new ArchiveMovieStorage()
+  val storage = new ArchiveReadModel()
 
   /**
    * Ensure that the constructed ActorSystem is shut down when the JVM shuts down
@@ -49,13 +45,19 @@ trait CoreActors {
   private implicit val _ec: ExecutionContext = system.dispatcher
 
   // Create the querying actor communicating with the different external services
-  val queryRef: ActorRef = system.actorOf(Props(new MovieQueryActor(new XrelQueryServiceImpl with SpraySendReceive)))
+  val queryRef: ActorRef = system.actorOf(Props(
+    classOf[MovieQueryActor],
+    new XrelQueryServiceImpl with SpraySendReceive
+  ))
 
-  val readModelRef: ActorRef = system.actorOf(Props(new ReadModel(storage)))
-  val readModelThrottler     = system.actorOf(Props(classOf[TimerBasedThrottler], 10.msgsPerSecond))
-  // Set the target
-  readModelThrottler ! SetTarget(Some(readModelRef))
+  val readModelRef: ActorRef = system.actorOf(Props(
+    classOf[ArchiveReadModel]
+  ))
 
   // Create the actor responsible for updating the movie directory
-  val directoryRef: ActorRef = system.actorOf(Props(new ScrapeCoordinator(queryRef, readModelThrottler)))
+  val directoryRef: ActorRef = system.actorOf(Props(
+    classOf[ScrapeCoordinator],
+    queryRef,
+    readModelRef
+  ))
 }

@@ -3,7 +3,7 @@ package com.akuendig.movie.api
 import com.akuendig.movie.core.{CoreActors, Core}
 import akka.actor.Props
 import spray.routing.RouteConcatenation
-import com.akuendig.movie.storage.NopMovieStorage
+import com.akuendig.movie.storage.NopReadModel
 
 /**
  * The REST API layer. It exposes the REST services, but does not provide any
@@ -17,7 +17,7 @@ trait ApiRoutes extends RouteConcatenation {
   private implicit val _ec = system.dispatcher
 
   val routes =
-    new MovieSearchService(storage).route ~
+    new MovieSearchService(readModelRef).route ~
     new StaticResources().route
 
   val rootService = system.actorOf(Props(new RoutedHttpService(routes)))

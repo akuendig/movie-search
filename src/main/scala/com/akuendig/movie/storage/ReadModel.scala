@@ -14,19 +14,6 @@ object ReadModel {
 
   final case class StoreReleasesComplete(release: Traversable[Release]) extends ReadModelMessage
 
-}
+  final case class GetPaged(skip: Int, take: Int) extends ReadModelMessage
 
-class ReadModel(storage: MovieStorage) extends Actor with ActorLogging {
-
-  import ReadModel._
-
-  private implicit val _ec: ExecutionContext = context.system.dispatcher
-
-  override def receive: Receive = {
-    case StoreReleases(releases) =>
-      storage.
-        put(releases).
-        map(_ => StoreReleasesComplete(releases)).
-        pipeTo(sender)
-  }
 }
