@@ -29,7 +29,8 @@ class ScrapeCoordinator(queryRef: ActorRef, readModel: ActorRef) extends Actor w
   private var totalPages = -1
 
   private var waitingForResponse = false
-  private val storageConfig      = StorageConfigExtension(context.system)
+
+  private val storageConfig = StorageConfigExtension(context.system)
 
   override def preStart() {
     val state = storageConfig.scene

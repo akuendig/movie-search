@@ -3,12 +3,10 @@ package com.akuendig.movie.core
 import akka.actor.{ActorRef, Props, ActorSystem}
 import com.akuendig.movie.search._
 import akka.contrib.throttle.Throttler._
-import scala.concurrent.duration._
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.ExecutionContext
 import akka.contrib.throttle.TimerBasedThrottler
 import com.akuendig.movie.http.SpraySendReceive
-import com.akuendig.movie.storage.{MovieStorage, NopMovieStorage, ReadModel}
-import com.akuendig.movie.domain.Release
+import com.akuendig.movie.storage.{ArchiveMovieStorage, MovieStorage, ReadModel}
 
 /**
  * Core is type containing the ``system: ActorSystem`` member. This enables us to use it in our
@@ -32,7 +30,7 @@ trait BootedCore extends Core {
    */
   implicit lazy val system = ActorSystem("movies")
 
-  val storage = new NopMovieStorage()
+  val storage = new ArchiveMovieStorage()
 
   /**
    * Ensure that the constructed ActorSystem is shut down when the JVM shuts down
@@ -54,7 +52,7 @@ trait CoreActors {
   val queryRef: ActorRef = system.actorOf(Props(new MovieQueryActor(new XrelQueryServiceImpl with SpraySendReceive)))
 
   val readModelRef: ActorRef = system.actorOf(Props(new ReadModel(storage)))
-  val readModelThrottler = system.actorOf(Props(classOf[TimerBasedThrottler], 10.msgsPerSecond))
+  val readModelThrottler     = system.actorOf(Props(classOf[TimerBasedThrottler], 10.msgsPerSecond))
   // Set the target
   readModelThrottler ! SetTarget(Some(readModelRef))
 

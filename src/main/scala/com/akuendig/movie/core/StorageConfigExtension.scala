@@ -18,7 +18,7 @@ class StorageConfigExtensionImpl(config: Config) extends Extension {
   }
 
   private lazy val defaultConf = ConfigFactory.parseResources("state.conf")
-  private lazy val conf = ConfigFactory.parseFile(stateFile).withFallback(defaultConf)
+  private lazy val conf        = ConfigFactory.parseFile(stateFile).withFallback(defaultConf)
 
   def snapshotScene(state: ScrapingState) {
     conf.withValue("xrel.scene.year", ConfigValueFactory.fromAnyRef(state.year))
@@ -34,6 +34,9 @@ class StorageConfigExtensionImpl(config: Config) extends Extension {
       conf.getInt("xrel.scene.page"),
       conf.getInt("xrel.scene.totalPages")
     )
+
+  def archive: String = config.getString("storage.archive")
+  def archiveLock: Object = new Object
 }
 
 object StorageConfigExtension
