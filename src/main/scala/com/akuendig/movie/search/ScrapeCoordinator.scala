@@ -89,6 +89,7 @@ class ScrapeCoordinator(queryRef: ActorRef, readModel: ActorRef) extends Actor w
       implicit val _timeout = Timeout(5.seconds)
       readModel ? StoreReleases(paged.releases)
     case MovieDirectorySnapshot =>
+      println(ScrapingState(year, month, page, totalPages))
       storageConfig.snapshotScene(ScrapingState(year, month, page, totalPages))
     case any =>
       log.warning("Unmatched message {}", any)

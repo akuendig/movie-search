@@ -1,9 +1,10 @@
 package com.akuendig.movie.core
 
-import com.typesafe.config.{ConfigValueFactory, ConfigFactory, Config}
 import akka.actor.{ExtendedActorSystem, ExtensionIdProvider, ExtensionId, Extension}
-import java.io.File
 import com.akuendig.movie.search.ScrapingState
+import com.typesafe.config.{ConfigValueFactory, ConfigFactory, Config}
+import java.io.{FileOutputStream, File}
+import resource.managed
 
 
 class StorageConfigExtensionImpl(config: Config) extends Extension {
@@ -21,10 +22,18 @@ class StorageConfigExtensionImpl(config: Config) extends Extension {
   private lazy val conf        = ConfigFactory.parseFile(stateFile).withFallback(defaultConf)
 
   def snapshotScene(state: ScrapingState) {
-    conf.withValue("xrel.scene.year", ConfigValueFactory.fromAnyRef(state.year))
-    conf.withValue("xrel.scene.month", ConfigValueFactory.fromAnyRef(state.month))
-    conf.withValue("xrel.scene.page", ConfigValueFactory.fromAnyRef(state.page))
-    conf.withValue("xrel.scene.totalPages", ConfigValueFactory.fromAnyRef(state.totalPages))
+    val fullConfigString =
+      conf.
+        withValue("xrel.scene.year", ConfigValueFactory.fromAnyRef(state.year)).
+        withValue("xrel.scene.month", ConfigValueFactory.fromAnyRef(state.month)).
+        withValue("xrel.scene.page", ConfigValueFactory.fromAnyRef(state.page)).
+        withValue("xrel.scene.totalPages", ConfigValueFactory.fromAnyRef(state.totalPages)).
+        root.
+        render()
+
+    for {
+      out <- managed(new FileOutputStream(stateFile, false))
+    } out.write(fullConfigString.getBytes)
   }
 
   def scene: ScrapingState =
@@ -36,6 +45,7 @@ class StorageConfigExtensionImpl(config: Config) extends Extension {
     )
 
   def archive: String = config.getString("storage.archive")
+
   def archiveLock: Object = new Object
 }
 
