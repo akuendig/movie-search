@@ -3,9 +3,10 @@ package com.akuendig.movie
 
 import akka.pattern.ask
 import akka.util.Timeout
-import com.akuendig.movie.core.{CoreActors, BootedCore}
 import com.akuendig.movie.api.{Web, ApiRoutes}
+import com.akuendig.movie.core.{CoreActors, BootedCore}
 import com.akuendig.movie.domain.Release
+import com.akuendig.movie.search.ScrapeCoordinator.{MovieDirectorySnapshot, MovieDirectoryPing}
 import com.akuendig.movie.storage.ReadModel.{StoreReleasesComplete, StoreReleases}
 import java.io.File
 import scala.concurrent.{Await, ExecutionContext}
@@ -35,12 +36,13 @@ object Boot extends App with BootedCore with CoreActors with ApiRoutes with Web 
         release <- json.extract[Seq[Release]]
       } yield release
     } {
-      Await.result(readModelRef ? StoreReleases(releases), _timeout.duration).asInstanceOf[StoreReleasesComplete]
+      Await.result(readModelRef ? StoreReleases(releases), _timeout.duration)
       println(s"Extracted files ${group.min}.json - ${group.max}.json")
     }
   }
 
   //  readOldData()
 
-  //  system.scheduler.schedule(1.second, 15.seconds, directoryRef, MovieDirectoryActor.MovieDirectoryPing)
+  system.scheduler.schedule(1.second, 15.seconds, directoryRef, MovieDirectoryPing)
+  system.scheduler.schedule(1.minute, 1.minute, directoryRef, MovieDirectorySnapshot)
 }

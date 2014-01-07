@@ -26,8 +26,6 @@ trait BootedCore extends Core {
    */
   implicit lazy val system = ActorSystem("movies")
 
-  val storage = new ArchiveReadModel()
-
   /**
    * Ensure that the constructed ActorSystem is shut down when the JVM shuts down
    */
@@ -48,16 +46,17 @@ trait CoreActors {
   val queryRef: ActorRef = system.actorOf(Props(
     classOf[MovieQueryActor],
     new XrelQueryServiceImpl with SpraySendReceive
-  ))
+  ),
+    "xrel-query"
+  )
 
-  val readModelRef: ActorRef = system.actorOf(Props(
-    classOf[ArchiveReadModel]
-  ))
+  val readModelRef: ActorRef = system.actorOf(Props[ArchiveReadModel], "read-model")
 
   // Create the actor responsible for updating the movie directory
   val directoryRef: ActorRef = system.actorOf(Props(
     classOf[ScrapeCoordinator],
     queryRef,
     readModelRef
-  ))
+  ),
+    "scrape-coordinator")
 }

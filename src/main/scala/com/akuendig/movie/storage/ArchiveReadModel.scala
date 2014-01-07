@@ -1,6 +1,6 @@
 package com.akuendig.movie.storage
 
-import akka.actor.Actor
+import akka.actor.{ActorLogging, Actor}
 import com.akuendig.movie.domain.Release
 import com.akuendig.movie.core.StorageConfigExtension
 import java.util.UUID
@@ -8,11 +8,10 @@ import java.nio.file.{Path, Files, StandardOpenOption}
 import net.java.truevfs.access._
 import net.java.truevfs.kernel.spec.FsSyncOptions
 import resource.managed
-import scala.concurrent.Future
 import scala.collection.JavaConversions._
 
 
-class ArchiveReadModel() extends Actor {
+class ArchiveReadModel() extends Actor with ActorLogging {
 
   import org.json4s._
   import org.json4s.jackson.Serialization
@@ -31,57 +30,67 @@ class ArchiveReadModel() extends Actor {
   }
 
   override def preStart() {
+    log.info("Starting up")
     loadIndex()
+    log.info("Finished loading index with {} entries", index.size)
   }
 
-  private def read(file: Path): Seq[Release] = {
+  def read(file: Path): Seq[Release] = {
     import org.json4s.jackson.JsonMethods._
 
-    parse(FileInput(file.toFile)).extract[Seq[Release]]
+    managed(Files.newInputStream(file)).acquireAndGet {
+      in => parse(StreamInput(in)).extract[Seq[Release]]
+    }
   }
 
-  private def write(releases: Traversable[Release]): Path = {
-    val fileName = UUID.randomUUID().toString
+  def write(releases: Traversable[Release]): Path = {
+    val fileName = s"${UUID.randomUUID()}.json"
     val filePath = archivePath.resolve(fileName)
 
     for {
       writer <- managed(Files.newOutputStream(filePath, StandardOpenOption.CREATE_NEW))
     } Serialization.write(releases, writer)
 
+    TVFS.sync(FsSyncOptions.SYNC)
+
     filePath
   }
 
-  private def loadIndex() {
+  def loadIndex() {
     var indexBuilder = Map.newBuilder[String, Path]
 
     for {
-      dir <- managed(Files.newDirectoryStream(archivePath, "*.json"))
+      dir <- managed(Files.newDirectoryStream(archivePath))
       file <- dir
+
       id <- read(file).map(_.id)
     } indexBuilder += id -> file
 
     index = indexBuilder.result()
   }
 
-  private def addIndex(releases: Traversable[Release], file: Path) {
+  def addIndex(releases: Traversable[Release], file: Path) {
     index ++= releases.map(_.id -> file)
   }
 
-  private def notIndexed(releases: Traversable[Release]): Traversable[Release] = {
-    releases.filter(r => index.contains(r.id))
+  def notIndexed(releases: Traversable[Release]): Traversable[Release] = {
+    releases.filterNot(r => index.contains(r.id))
   }
-
-  def get(skip: Int, take: Int): Future[Traversable[Release]] = ???
 
   def receive: Actor.Receive = {
     case StoreReleases(releases) =>
       val filtered = notIndexed(releases)
-      val file = write(filtered)
 
-      addIndex(filtered, file)
+      if (filtered.size > 0) {
+        val file = write(filtered)
+
+        addIndex(filtered, file)
+      }
+
+      log.info("Stored {} releases", filtered.size)
 
       sender ! StoreReleasesComplete(releases)
-    case GetPaged(skip, take) =>
+    case GetPaged(skip, take)    =>
 
   }
 }

@@ -1,8 +1,11 @@
 package com.akuendig.movie.search
 
 import akka.actor.{ActorLogging, Actor, ActorRef}
+import akka.pattern.ask
+import akka.util.Timeout
 import com.akuendig.movie.core.StorageConfigExtension
 import com.akuendig.movie.storage.ReadModel
+import scala.concurrent.duration._
 
 
 case class ScrapingState(year: Int, month: Int, page: Int, totalPages: Int)
@@ -33,12 +36,18 @@ class ScrapeCoordinator(queryRef: ActorRef, readModel: ActorRef) extends Actor w
   private val storageConfig = StorageConfigExtension(context.system)
 
   override def preStart() {
+    log.info("Starting up")
+
     val state = storageConfig.scene
 
     year = state.year
     month = state.month
     page = state.page
     totalPages = state.totalPages
+
+    log.info("Continuing from year: {} month: {} page: {} totalPages: {}",
+      year, month, page, totalPages
+    )
   }
 
   override def receive: Receive = {
@@ -76,8 +85,9 @@ class ScrapeCoordinator(queryRef: ActorRef, readModel: ActorRef) extends Actor w
 
       totalPages = paged.totalPages
 
-      // Update the directory
-      readModel ! StoreReleases(paged.releases)
+      // Update the directory, ignore the response but silent logger warning
+      implicit val _timeout = Timeout(5.seconds)
+      readModel ? StoreReleases(paged.releases)
     case MovieDirectorySnapshot =>
       storageConfig.snapshotScene(ScrapingState(year, month, page, totalPages))
     case any =>
