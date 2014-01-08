@@ -18,8 +18,9 @@ class StorageConfigExtensionImpl(config: Config) extends Extension {
     file
   }
 
-  private lazy val defaultConf = ConfigFactory.parseResources("state.conf")
-  private lazy val conf        = ConfigFactory.parseFile(stateFile).withFallback(defaultConf)
+  private def defaultConf = ConfigFactory.parseResources("state.conf")
+
+  private def conf = ConfigFactory.parseFile(stateFile).withFallback(defaultConf)
 
   def snapshotScene(state: ScrapingState) {
     val fullConfigString =
@@ -36,12 +37,30 @@ class StorageConfigExtensionImpl(config: Config) extends Extension {
     } out.write(fullConfigString.getBytes)
   }
 
+  def snapshotMovies(pageCount: Int, totalPages: Int) {
+    val fullConfigString =
+      conf.
+        withValue("xrel.scene.movies.pageCount", ConfigValueFactory.fromAnyRef(pageCount)).
+        withValue("xrel.scene.movies.totalPages", ConfigValueFactory.fromAnyRef(totalPages)).
+        root.
+        render()
+
+    for {
+      out <- managed(new FileOutputStream(stateFile, false))
+    } out.write(fullConfigString.getBytes)
+  }
+
   def scene: ScrapingState =
     ScrapingState(
       conf.getInt("xrel.scene.year"),
       conf.getInt("xrel.scene.month"),
       conf.getInt("xrel.scene.page"),
       conf.getInt("xrel.scene.totalPages")
+    )
+
+  def movies: (Int, Int) = (
+    conf.getInt("xrel.scene.movies.pageCount"),
+    conf.getInt("xrel.scene.movies.totalPages")
     )
 
   def archive: String = config.getString("storage.archive")

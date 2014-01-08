@@ -4,7 +4,7 @@ import akka.actor.{ActorLogging, Actor, ActorRef}
 import akka.pattern.ask
 import akka.util.Timeout
 import com.akuendig.movie.core.StorageConfigExtension
-import com.akuendig.movie.storage.ReadModel
+import com.akuendig.movie.storage.ReadModel.StoreReleases
 import scala.concurrent.duration._
 
 
@@ -23,12 +23,9 @@ object ScrapeCoordinator {
 class ScrapeCoordinator(queryRef: ActorRef, readModel: ActorRef) extends Actor with ActorLogging {
 
   import ScrapeCoordinator._
-  import ReadModel._
   import MovieQueryActor._
 
-  private var year       = 0
-  private var month      = 0
-  private var page       = 0
+  private var pageCount  = 0
   private var totalPages = -1
 
   private var waitingForResponse = false
@@ -38,59 +35,57 @@ class ScrapeCoordinator(queryRef: ActorRef, readModel: ActorRef) extends Actor w
   override def preStart() {
     log.info("Starting up")
 
-    val state = storageConfig.scene
+    val (pc, tp) = storageConfig.movies
+    pageCount = pc
+    totalPages = tp
 
-    year = state.year
-    month = state.month
-    page = state.page
-    totalPages = state.totalPages
-
-    log.info("Continuing from year: {} month: {} page: {} totalPages: {}",
-      year, month, page, totalPages
+    log.info("Continuing from pageCount: {} totalPages: {}",
+      pageCount, totalPages
     )
   }
+
+  // We start downloading from the back and `page` is actually our
+  // count of downloaded pages.
+  def inversePage: Int =
+    Math.max(1, totalPages - pageCount)
 
   override def receive: Receive = {
     case MovieDirectoryPing if !waitingForResponse =>
       val query =
-        if (totalPages >= 0 && page > totalPages) {
-          if (month == 11) {
-            QuerySceneReleases(year = year + 1, month = 1, page = 1)
-          } else {
-            QuerySceneReleases(year = year, month = month + 1, page = 1)
-          }
-        } else {
-          QuerySceneReleases(year = year, month = month, page = page + 1)
-        }
+        if (totalPages < 0)
+          BrowseSceneReleases(0, SceneCategoryMovies)
+        else
+          BrowseSceneReleases(inversePage, SceneCategoryMovies)
 
       waitingForResponse = true
 
       queryRef ! query
-    case QuerySceneReleasesResponse(q@QuerySceneReleases(yr, mt, pg), None) =>
+    case QuerySceneReleasesResponse(_, None)
+         | BrowseSceneReleasesResponse(_, None) =>
       waitingForResponse = false
-    case QuerySceneReleasesResponse(q@QuerySceneReleases(yr, mt, pg), Some(paged)) =>
+    case BrowseSceneReleasesResponse(query, Some(paged)) =>
       waitingForResponse = false
 
-      // When events are replayed then adjust the current year, month and page counters
-      val correct =
-        (pg == page + 1) ||
-          (pg == 1 && mt == month + 1) ||
-          (pg == 1 && mt == 1 && yr == year + 1)
-
-      if (!correct) log.warning("Page not processed in sequence {}", q)
-
-      year = yr
-      month = mt
-      page = pg
+      // Only increment our page counter if we are certain, that we
+      // did not miss a page. For example:
+      // current(page = 12, totalPages = 100) => browse(88)
+      // response(page = 88, totalPages = 102) => we missed 90 and 89
+      //  because we have two new pages. Simplest solution is to just
+      //  requery page 102 - 12 == 90.
+      if (paged.totalPages == totalPages) {
+        pageCount = paged.page + 1
+      } else {
+        log.warning(s"The was a new page created since the last query. Total pages {} => {}", totalPages,
+          paged.totalPages)
+      }
 
       totalPages = paged.totalPages
 
-      // Update the directory, ignore the response but silent logger warning
+      // We store the releases anyway.
       implicit val _timeout = Timeout(5.seconds)
       readModel ? StoreReleases(paged.releases)
     case MovieDirectorySnapshot =>
-      println(ScrapingState(year, month, page, totalPages))
-      storageConfig.snapshotScene(ScrapingState(year, month, page, totalPages))
+      storageConfig.snapshotMovies(pageCount, totalPages)
     case any =>
       log.warning("Unmatched message {}", any)
   }

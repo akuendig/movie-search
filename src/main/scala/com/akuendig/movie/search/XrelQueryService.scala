@@ -7,6 +7,8 @@ import com.akuendig.movie.search.xrel._
 trait XrelQueryService {
   def fetchSceneRelease(page: Int, year: Int, month: Int): Future[PagedSceneReleases]
 
+  def browsSceneRelease(page: Int, category: SceneCategory): Future[PagedSceneReleases]
+
   def fetchDetailedSceneRelease(id: String): Future[DetailedSceneRelease]
 
   def fetchP2PCategories(): Future[Seq[Category]]
