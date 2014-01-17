@@ -26,10 +26,19 @@ class ScrapeCoordinator(queryRef: ActorRef, readModel: ActorRef) extends Actor w
   import ReadModel._
   import MovieQueryActor._
 
+  import org.json4s._
+  import org.json4s.jackson.JsonMethods._
+
+  implicit val _formats = DefaultFormats
+
   private var year       = 0
   private var month      = 0
   private var page       = 0
   private var totalPages = -1
+
+  def currentScrapingState = ScrapingState(year, month, page, totalPages)
+
+  private var unfinished = Set.empty[ScrapingState]
 
   private var waitingForResponse = false
 
@@ -38,12 +47,14 @@ class ScrapeCoordinator(queryRef: ActorRef, readModel: ActorRef) extends Actor w
   override def preStart() {
     log.info("Starting up")
 
-    val state = storageConfig.scene
+    val (state, extra: String) = storageConfig.scene
 
     year = state.year
     month = state.month
     page = state.page
     totalPages = state.totalPages
+
+    unfinished = parse(StringInput(extra)).extract[Set[ScrapingState]]
 
     log.info("Continuing from year: {} month: {} page: {} totalPages: {}",
       year, month, page, totalPages
@@ -52,15 +63,24 @@ class ScrapeCoordinator(queryRef: ActorRef, readModel: ActorRef) extends Actor w
 
   override def receive: Receive = {
     case MovieDirectoryPing if !waitingForResponse =>
+      def nextPage = QuerySceneReleases(year = year, month = month, page = page + 1)
+      def nextMonth = {
+        val m = month + 1
+        QuerySceneReleases(year = year + m / 12, month = m % 12, page = 1)
+      }
+
       val query =
-        if (totalPages >= 0 && page > totalPages) {
-          if (month == 11) {
-            QuerySceneReleases(year = year + 1, month = 1, page = 1)
+        if (totalPages >= 0) {
+          if (page >= 50 && totalPages > 50) {
+            unfinished += currentScrapingState
+            nextMonth
+          } else if (page > totalPages) {
+            nextMonth
           } else {
-            QuerySceneReleases(year = year, month = month + 1, page = 1)
+            nextPage
           }
         } else {
-          QuerySceneReleases(year = year, month = month, page = page + 1)
+          nextPage
         }
 
       waitingForResponse = true
@@ -89,8 +109,10 @@ class ScrapeCoordinator(queryRef: ActorRef, readModel: ActorRef) extends Actor w
       implicit val _timeout = Timeout(5.seconds)
       readModel ? StoreReleases(paged.releases)
     case MovieDirectorySnapshot =>
-      println(ScrapingState(year, month, page, totalPages))
-      storageConfig.snapshotScene(ScrapingState(year, month, page, totalPages))
+      println(currentScrapingState)
+      val json = compact(render(unfinished.asJValue))
+
+      storageConfig.snapshotScene(currentScrapingState, json)
     case any =>
       log.warning("Unmatched message {}", any)
   }

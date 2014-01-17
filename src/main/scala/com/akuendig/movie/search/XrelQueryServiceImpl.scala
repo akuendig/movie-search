@@ -41,6 +41,7 @@ abstract class XrelQueryServiceImpl(implicit val system: ActorSystem) extends Xr
     }
 
   def fetchSceneRelease(page: Int, year: Int, month: Int): Future[PagedSceneReleases] = {
+    // This method only works until page 50. After that it returns 404
     val address = "http://api.xrel.to/api/release/latest.json"
     val params = Map[String, String](
       "page" -> page.toString,
