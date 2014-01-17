@@ -27,9 +27,9 @@ class ScrapeCoordinator(queryRef: ActorRef, readModel: ActorRef) extends Actor w
   import MovieQueryActor._
 
   import org.json4s._
-  import org.json4s.jackson.JsonMethods._
+  import org.json4s.jackson.Serialization
 
-  implicit val _formats = DefaultFormats
+  implicit val _form = Serialization.formats(NoTypeHints)
 
   private var year       = 0
   private var month      = 0
@@ -54,7 +54,7 @@ class ScrapeCoordinator(queryRef: ActorRef, readModel: ActorRef) extends Actor w
     page = state.page
     totalPages = state.totalPages
 
-    unfinished = parse(StringInput(extra)).extract[Set[ScrapingState]]
+    unfinished = Serialization.read[Set[ScrapingState]](extra)
 
     log.info("Continuing from year: {} month: {} page: {} totalPages: {}",
       year, month, page, totalPages
@@ -110,7 +110,7 @@ class ScrapeCoordinator(queryRef: ActorRef, readModel: ActorRef) extends Actor w
       readModel ? StoreReleases(paged.releases)
     case MovieDirectorySnapshot =>
       println(currentScrapingState)
-      val json = compact(render(unfinished.asJValue))
+      val json = Serialization.write(unfinished)
 
       storageConfig.snapshotScene(currentScrapingState, json)
     case any =>

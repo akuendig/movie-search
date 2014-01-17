@@ -9,6 +9,7 @@ import net.java.truevfs.access._
 import net.java.truevfs.kernel.spec.FsSyncOptions
 import resource.managed
 import scala.collection.JavaConversions._
+import java.io.InputStreamReader
 
 
 class ArchiveReadModel() extends Actor with ActorLogging {
@@ -36,10 +37,8 @@ class ArchiveReadModel() extends Actor with ActorLogging {
   }
 
   def read(file: Path): Seq[Release] = {
-    import org.json4s.jackson.JsonMethods._
-
     managed(Files.newInputStream(file)).acquireAndGet {
-      in => parse(StreamInput(in)).extract[Seq[Release]]
+      in => Serialization.read[Seq[Release]](new InputStreamReader(in))
     }
   }
 
@@ -90,7 +89,7 @@ class ArchiveReadModel() extends Actor with ActorLogging {
       log.info("Stored {} releases", filtered.size)
 
       sender ! StoreReleasesComplete(releases)
-    case GetPaged(skip, take)    =>
+    case GetPaged(skip, take) =>
 
   }
 }
